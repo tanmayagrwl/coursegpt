@@ -5,6 +5,13 @@ const LessonSchema = new mongoose.Schema({
 	title: { type: String, required: true }, // Title of the lesson
 	type: { type: String, enum: ["lecture", "quiz", "lab"], required: true }, // Type of lesson
 	content: { type: String }, // Optional content for the lesson
+	learningOutcomes: [{ type: String }], // Array of learning outcomes
+	additionalResources: [
+		{
+			title: { type: String }, // Title of the resource
+			url: { type: String }, // URL for the resource
+		},
+	], // Array of additional resources
 });
 
 // Module Schema

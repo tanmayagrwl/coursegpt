@@ -161,6 +161,54 @@ dbConnect()
       }
     });
 
+
+    // update lesson
+    app.post("/api/updateLesson/:courseId/:moduleId/:lessonId", async (c) => {
+      const courseId = c.req.param("courseId");
+      const moduleId = c.req.param("moduleId");
+      const lessonId = c.req.param("lessonId");
+      const lessonData = await c.req.json();
+      
+      try {
+        const course = await Course.findById(courseId);
+        if (!course) {
+          return c.json({ message: "Course not found" }, 404);
+        }
+        
+        const module = course.modules.find((m) => m.id === moduleId);
+        if (!module) {
+          return c.json({ message: "Module not found" }, 404);
+        }
+        
+        const lessonIndex = module.lessons.findIndex((l) => l.id === lessonId);
+        if (lessonIndex === -1) {
+          return c.json({ message: "Lesson not found" }, 404);
+        }
+        
+        // Create a new object with the original lesson as the base
+        const updatedLesson = {
+          ...module.lessons[lessonIndex],
+          ...lessonData
+        };
+        
+        // Force the ID to be the original one
+        updatedLesson.id = lessonId;
+        
+        // Replace the lesson with the updated version
+        module.lessons[lessonIndex] = updatedLesson;
+        
+        await course.save();
+        
+        return c.json({
+          message: "Lesson updated successfully",
+          course
+        }, 200);
+      } catch (error) {
+        console.error("Error updating lesson:", error);
+        return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
+
 app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from Hono on Vercel!' });
 });

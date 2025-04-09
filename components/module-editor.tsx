@@ -32,7 +32,33 @@ import MediaUploadDialog from "@/components/media-upload-dialog";
 import MediaBadge from "@/components/media-badge";
 import axios from "axios";
 
-export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
+interface Lesson {
+  id: string;
+  content: string;
+  type: string;
+  title: string;
+  learningOutcomes: string[];
+  additionalResources: {
+    title: string;
+    url: string;
+    type: string;
+  }[];
+}
+
+interface Module {
+  id: string;
+  title: string;
+  description: string;
+  lessons: Lesson[];
+}
+
+interface ModuleEditorProps {
+  module: Module;
+  courseId: string;
+  onLessonDeleted: () => void;
+}
+
+export default function ModuleEditor({ module, courseId, onLessonDeleted }: ModuleEditorProps) {
   console.log("ModuleEditor props:", module, courseId);
   const [isGeneratingLesson, setIsGeneratingLesson] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<{
@@ -76,6 +102,59 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
       console.error("Error deleting lesson:", error);
     }
   };
+
+  const handleUpdateLesson = async (updatedLesson) => {
+    if (!courseId || !module.id || !selectedLesson?.id) {
+      console.error("Missing required parameters for updating a lesson.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/updateLesson/${courseId}/${module.id}/${selectedLesson.id}`,
+        updatedLesson
+      );
+      console.log("Lesson updated successfully:", response.data);
+      onLessonDeleted(); // Refresh the course data
+      setSelectedLesson(response.data.course.modules
+        .find(m => m.id === module.id)?.lessons
+        .find(l => l.id === selectedLesson.id) || null);
+    } catch (error) {
+      console.error("Error updating lesson:", error);
+    }
+  };
+
+  const handleSaveLessonContent = () => {
+    if (selectedLesson) {
+      const updatedLesson = {
+        ...selectedLesson,
+        content: selectedLesson.content, // Update content
+      };
+      handleUpdateLesson(updatedLesson);
+    }
+  };
+
+  const handleSaveLearningOutcomes = (updatedOutcomes: string[]) => {
+    if (selectedLesson) {
+      const updatedLesson = {
+        ...selectedLesson,
+        learningOutcomes: updatedOutcomes, // Update learning outcomes
+      };
+      handleUpdateLesson(updatedLesson);
+    }
+  };
+
+  const handleSaveResources = (updatedResources: { title: string; url: string; type: string }[]) => {
+    if (selectedLesson) {
+      const updatedLesson = {
+        ...selectedLesson,
+        additionalResources: updatedResources, // Update resources
+      };
+      handleUpdateLesson(updatedLesson);
+    }
+  };
+
+  
 
   const getLessonIcon = (type) => {
     switch (type) {
@@ -299,11 +378,14 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
                   rows={12}
                   className="font-mono text-sm"
                   value={selectedLesson.content}
+                  onChange={(e) =>
+                    setSelectedLesson({ ...selectedLesson, content: e.target.value })
+                  }
                 />
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline">Cancel</Button>
-                  <Button>Save Changes</Button>
+                  <Button onClick={handleSaveLessonContent}>Save Changes</Button>
                 </div>
               </TabsContent>
 
@@ -325,11 +407,20 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
                       <Input
                         defaultValue={outcome}
                         className="flex-1"
+                        onChange={(e) => {
+                          const updatedOutcomes = [...selectedLesson.learningOutcomes];
+                          updatedOutcomes[index] = e.target.value;
+                          setSelectedLesson({ ...selectedLesson, learningOutcomes: updatedOutcomes });
+                        }}
                       />
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0"
+                        onClick={() => {
+                          const updatedOutcomes = selectedLesson.learningOutcomes.filter((_, i) => i !== index);
+                          setSelectedLesson({ ...selectedLesson, learningOutcomes: updatedOutcomes });
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -341,10 +432,39 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
                   <div className="flex items-center gap-2">
                     <Input
                       placeholder="Enter new learning outcome..."
-                      className="flex-1"
+                      className="flex-1 learning-outcome-input"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                          setSelectedLesson({
+                            ...selectedLesson,
+                            learningOutcomes: [...selectedLesson.learningOutcomes, e.currentTarget.value.trim()],
+                          });
+                          e.currentTarget.value = "";
+                        }
+                      }}
                     />
-                    <Button size="sm">Add</Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const input = document.querySelector<HTMLInputElement>(".learning-outcome-input");
+                        if (input && input.value.trim()) {
+                          setSelectedLesson({
+                            ...selectedLesson,
+                            learningOutcomes: [...selectedLesson.learningOutcomes, input.value.trim()],
+                          });
+                          input.value = "";
+                        }
+                      }}
+                    >
+                      Add
+                    </Button>
                   </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline">Cancel</Button>
+                  <Button onClick={() => handleSaveLearningOutcomes(selectedLesson.learningOutcomes)}>
+                    Save Changes
+                  </Button>
                 </div>
               </TabsContent>
 
@@ -358,48 +478,149 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
                 </div>
 
                 <div className="space-y-2">
-                  {selectedLesson?.additionalResources?.map((resource, index) => (
+                  {(selectedLesson?.additionalResources || [])?.map((resource, index) => (
                     <div key={index} className="flex items-center gap-2 p-3 border rounded-md">
-                      <div className="flex-1">
-                        <div className="font-medium">{resource.title}</div>
-                        <div className="text-sm text-gray-500">{resource.url}</div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Input
+                        defaultValue={resource.title}
+                        className="flex-1"
+                        onChange={(e) => {
+                          const updatedResources = [...selectedLesson.additionalResources];
+                          updatedResources[index] = { ...updatedResources[index], title: e.target.value };
+                          setSelectedLesson({ ...selectedLesson, additionalResources: updatedResources });
+                        }}
+                      />
+                      <Input
+                        defaultValue={resource.url}
+                        className="flex-1"
+                        onChange={(e) => {
+                          const updatedResources = [...selectedLesson.additionalResources];
+                          updatedResources[index] = { ...updatedResources[index], url: e.target.value };
+                          setSelectedLesson({ ...selectedLesson, additionalResources: updatedResources });
+                        }}
+                      />
+                      <Select
+                        defaultValue={resource.type}
+                        onValueChange={(value) => {
+                          const updatedResources = [...selectedLesson.additionalResources];
+                          updatedResources[index] = { ...updatedResources[index], type: value };
+                          setSelectedLesson({ ...selectedLesson, additionalResources: updatedResources });
+                        }}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="article">Article</SelectItem>
+                          <SelectItem value="video">Video</SelectItem>
+                          <SelectItem value="book">Book</SelectItem>
+                          <SelectItem value="website">Website</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          const updatedResources = selectedLesson.additionalResources.filter((_, i) => i !== index);
+                          setSelectedLesson({ ...selectedLesson, additionalResources: updatedResources });
+                        }}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
+                </div>
 
-                  <div className="mt-2 space-y-2">
-                    <div className="p-3 border rounded-md">
-                      <div className="space-y-2">
+                <div className="mt-2 space-y-2">
+                  <div className="p-3 border rounded-md">
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Resource title"
+                        className="w-full"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                            const newResource = {
+                              title: e.currentTarget.value.trim(),
+                              url: "",
+                              type: "article",
+                            };
+                            setSelectedLesson({
+                              ...selectedLesson,
+                              additionalResources: [...selectedLesson.additionalResources, newResource],
+                            });
+                            e.currentTarget.value = "";
+                          }
+                        }}
+                      />
+                      <div className="flex gap-2">
                         <Input
-                          placeholder="Resource title"
-                          className="w-full"
+                          placeholder="URL or location"
+                          className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                              const newResource = {
+                                title: "",
+                                url: e.currentTarget.value.trim(),
+                                type: "article",
+                              };
+                              setSelectedLesson({
+                                ...selectedLesson,
+                                additionalResources: [...selectedLesson.additionalResources, newResource],
+                              });
+                              e.currentTarget.value = "";
+                            }
+                          }}
                         />
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="URL or location"
-                            className="flex-1"
-                          />
-                          <Select defaultValue="article">
-                            <SelectTrigger className="w-[120px]">
-                              <SelectValue placeholder="Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="article">Article</SelectItem>
-                              <SelectItem value="video">Video</SelectItem>
-                              <SelectItem value="book">Book</SelectItem>
-                              <SelectItem value="website">Website</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button size="sm" className="w-full">
-                          Add Resource
-                        </Button>
+                        <Select
+                          defaultValue="article"
+                          onValueChange={(value) => {
+                            const newResource = {
+                              title: "",
+                              url: "",
+                              type: value,
+                            };
+                            setSelectedLesson({
+                              ...selectedLesson,
+                              additionalResources: [...selectedLesson.additionalResources, newResource],
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="article">Article</SelectItem>
+                            <SelectItem value="video">Video</SelectItem>
+                            <SelectItem value="book">Book</SelectItem>
+                            <SelectItem value="website">Website</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={() => {
+                          const newResource = {
+                            title: "",
+                            url: "",
+                            type: "article",
+                          };
+                          setSelectedLesson({
+                            ...selectedLesson,
+                            additionalResources: [...(selectedLesson.additionalResources || []), newResource],
+                          });
+                        }}
+                      >
+                        Add Resource
+                      </Button>
                     </div>
                   </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline">Cancel</Button>
+                  <Button onClick={() => handleSaveResources(selectedLesson.additionalResources)}>
+                    Save Changes
+                  </Button>
                 </div>
               </TabsContent>
             </Tabs>
