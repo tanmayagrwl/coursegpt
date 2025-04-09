@@ -21,13 +21,6 @@ import {
 	Loader2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import AddLessonDialog from "@/components/add-lesson-dialog";
 import MediaUploadDialog from "@/components/media-upload-dialog";
 import MediaBadge from "@/components/media-badge";
@@ -69,10 +62,65 @@ export default function ModuleEditor({
 	const [isGeneratingContent, setIsGeneratingContent] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 	const [timedContent, setTimedContent] = useState("");
+	const [timedLearningOutcomes, setTimedLearningOutcomes] = useState<string[]>(
+		[],
+	);
+	const [isgeneratingOutcomes, setIsGeneratingOutcomes] = useState(false);
 	console.log("Module", module);
 	console.log("Selected lesson:", selectedLesson);
 	const [mediaBadges, setMediaBadges] = useState([]);
 	console.log("Set selected lesson:", setSelectedLesson);
+
+	const handleGenerateOutcomes = async (
+		title: string,
+	): Promise<{ outcomes: string[] }> => {
+		setTimedLearningOutcomes(selectedLesson?.learningOutcomes || []);
+		console.log("Timed learning outcomes:", timedLearningOutcomes);
+		console.log("Generating outcomes for lesson:", title);
+		setIsGeneratingOutcomes(true);
+		try {
+			// Input validation
+			if (!title || typeof title !== "string" || title.trim() === "") {
+				throw new Error("A valid lesson title is required");
+			}
+			console.log("Making API call to generate outcomes...", title);
+			const response = await axios.post("/api/generateOutcomes", { title });
+
+			// Check for successful response
+			if (response.status !== 200) {
+				throw new Error(`API error: ${response.status} ${response.statusText}`);
+			}
+
+			// Check if the response has the expected format
+			if (!response.data) {
+				throw new Error("API returned unexpected data format");
+			}
+
+			console.log("Generated outcomes:", response.data);
+
+			if (selectedLesson) {
+				setSelectedLesson({
+					...selectedLesson,
+					learningOutcomes: response.data,
+				});
+			}
+			return response.data;
+		} catch (error) {
+			console.error("Error generating outcomes:", error);
+			if (axios.isAxiosError(error)) {
+				if (error.response) {
+					throw new Error(
+						`Failed to generate outcomes: ${error.response.data?.message || error.message}`,
+					);
+				}
+			}
+			throw new Error(
+				`Failed to generate outcomes: ${(error as Error).message}`,
+			);
+		} finally {
+			setIsGeneratingOutcomes(false);
+		}
+	};
 
 	const handleGenerateContent = async (
 		title: string,
@@ -197,9 +245,9 @@ export default function ModuleEditor({
 				learningOutcomes: updatedOutcomes, // Update learning outcomes
 			};
 			handleUpdateLesson(updatedLesson);
+			setTimedLearningOutcomes([]);
 		}
 	};
-
 
 	const getLessonIcon = (type) => {
 		switch (type) {
@@ -441,7 +489,13 @@ export default function ModuleEditor({
 								/>
 
 								<div className="flex justify-end gap-2">
-									<Button variant="outline" disabled={timedContent===""} onClick={handleContentCancelButton}>Cancel</Button>
+									<Button
+										variant="outline"
+										disabled={timedContent === ""}
+										onClick={handleContentCancelButton}
+									>
+										Cancel
+									</Button>
 									<Button onClick={handleSaveLessonContent}>
 										Save Changes
 									</Button>
@@ -451,9 +505,18 @@ export default function ModuleEditor({
 							<TabsContent value="learning-outcomes" className="space-y-4">
 								<div className="flex justify-between items-center mb-2">
 									<Label>Learning Outcomes</Label>
-									<Button variant="outline" size="sm">
+									<Button
+										variant="outline"
+										size="sm"
+										disabled={isgeneratingOutcomes}
+										onClick={() => handleGenerateOutcomes(selectedLesson.title)}
+									>
 										<Wand2 className="h-3 w-3 mr-2" />
-										Generate Outcomes
+										{isgeneratingOutcomes ? (
+											<Loader2 className="animate-spin" />
+										) : (
+											"Generate Outcomes"
+										)}
 									</Button>
 								</div>
 
@@ -539,7 +602,18 @@ export default function ModuleEditor({
 									</div>
 								</div>
 								<div className="flex justify-end gap-2">
-									<Button variant="outline">Cancel</Button>
+									<Button
+										variant="outline"
+										disabled={timedLearningOutcomes.length === 0}
+										onClick={() => {
+											setSelectedLesson({
+												...selectedLesson,
+												learningOutcomes: timedLearningOutcomes,
+											});
+										}}
+									>
+										Cancel
+									</Button>
 									<Button
 										onClick={() =>
 											handleSaveLearningOutcomes(
