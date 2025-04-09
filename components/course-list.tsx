@@ -1,29 +1,13 @@
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Book, Clock, Users } from "lucide-react";
+import { Book } from "lucide-react";
 import type { Course } from "@/types/types";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { BASE_URL } from "@/lib/utils";
+interface CourseListProps {
+  courses: Course[];
+}
 
-export default function CourseList() {
-	const [courses, setCourses] = useState([]);
-
-	useEffect(() => {
-		async function fetchCourses() {
-			try {
-				const response = await axios.get(`${BASE_URL}/api/getAllCourses`);
-				console.log("fetchCourses", response.data);
-				setCourses(response.data);
-			} catch (error) {
-				console.error("Error fetching courses:", error);
-			}
-		}
-
-		fetchCourses();
-	}, []);
-	console.log("courses", courses);
+export default function CourseList({ courses }: CourseListProps) {
 
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

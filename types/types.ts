@@ -20,7 +20,7 @@ export interface Lesson {
   
   // Course Type
   export interface Course {
-    id: string; // Unique identifier for the course
+    _id: string; // Unique identifier for the course
     image?: string; // URL for the course image
     title: string; // Title of the course
     description?: string; // Description of the course
