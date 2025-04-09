@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Save, Wand2 } from "lucide-react"
 import Link from "next/link"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function NewCourse() {
   const router = useRouter()
@@ -160,13 +161,19 @@ export default function NewCourse() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="level">Difficulty Level*</Label>
-                          <Input 
-                            id="level" 
-                            placeholder="e.g., Beginner" 
+                            <Select
                             value={difficultyLevel}
-                            onChange={(e) => setDifficultyLevel(e.target.value)}
-                            required
-                          />
+                            onValueChange={setDifficultyLevel}
+                            >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select difficulty level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Beginner">Beginner</SelectItem>
+                              <SelectItem value="Intermediate">Intermediate</SelectItem>
+                              <SelectItem value="Advanced">Advanced</SelectItem>
+                            </SelectContent>
+                            </Select>
                         </div>
                       </div>
                     </form>

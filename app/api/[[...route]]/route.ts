@@ -258,6 +258,32 @@ dbConnect()
       }
     });
 
+
+    // delete module
+    app.post("/api/deleteModule/:courseId/:moduleId", async (c) => {
+      const courseId = c.req.param("courseId");
+      const moduleId = c.req.param("moduleId");
+
+      try {
+        const course = await Course.findById(courseId);
+        if (!course) {
+          return c.json({ message: "Course not found" }, 404);
+        }
+        
+        // Filter out the module to be deleted
+        course.modules = course.modules.filter((m) => m.id !== moduleId);
+        await course.save();
+
+        return c.json({
+          message: "Module deleted successfully",
+          course,
+        }, 200);
+      } catch (error) {
+        console.error("Error deleting module:", error);
+        return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
+
 app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from Hono on Vercel!' });
 });

@@ -108,12 +108,47 @@ export default function CourseDetail() {
     }
   };
 
+  const handleModuleDelete = async (moduleId: string) => {
+    if (!course) return;
+  
+    try {
+      const response = await fetch(`/api/deleteModule/${course.id}/${moduleId}`, {
+        method: "POST", // Changed from POST to DELETE
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to delete module: ${response.statusText}`);
+      }
+  
+      // Optimistically update the UI
+      setCourse(prevCourse => {
+        if (!prevCourse) return null;
+        return {
+          ...prevCourse,
+          modules: prevCourse.modules.filter(module => module.id !== moduleId),
+        };
+      });
+  
+      // Reset active module if it was the one deleted
+      if (activeModule === moduleId) {
+        setActiveModule(null);
+      }
+  
+    } catch (error) {
+      console.error("Error deleting module:", error);
+      // Optionally show error to user
+      alert("Failed to delete module. Please try again.");
+      // Revert by refetching
+      fetchCourse();
+    }
+  }
+
   const handleModuleClick = (moduleId: string) => {
     setActiveModule(moduleId === activeModule ? null : moduleId)
   }
 
   if (!course) {
-    return <div>Loading...</div>
+    return <div className="absolute top-1/2 left-1/2">Loading...</div>
   }
 
   return (
@@ -195,10 +230,6 @@ export default function CourseDetail() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
                                   <MoveUp className="h-4 w-4 mr-2" />
                                   Move Up
                                 </DropdownMenuItem>
@@ -206,7 +237,7 @@ export default function CourseDetail() {
                                   <MoveDown className="h-4 w-4 mr-2" />
                                   Move Down
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">
+                                <DropdownMenuItem className="text-red-600" onClick={() => handleModuleDelete(module.id)}>
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
