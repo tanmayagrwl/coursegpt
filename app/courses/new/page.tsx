@@ -57,15 +57,7 @@ export default function NewCourse() {
         <h1 className="text-2xl font-bold mb-6">Create New Course</h1>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="details">Course Details</TabsTrigger>
-            <TabsTrigger value="modules" disabled={!courseTitle}>
-              Modules
-            </TabsTrigger>
-            <TabsTrigger value="settings" disabled={!courseTitle}>
-              Settings
-            </TabsTrigger>
-          </TabsList>
+        
 
           <TabsContent value="details">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

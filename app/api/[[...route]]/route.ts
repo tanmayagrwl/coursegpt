@@ -86,6 +86,80 @@ dbConnect()
       }
     });
 
+    // delete lesson
+    app.post("/api/deleteLesson/:courseId/:moduleId/:lessonId", async (c) => {
+      const courseId = c.req.param("courseId");
+      const moduleId = c.req.param("moduleId");
+      const lessonId = c.req.param("lessonId");
+    
+      try {
+        const course = await Course.findById(courseId);
+        if (!course) {
+          return c.json({ message: "Course not found" }, 404);
+        }
+        const module = course.modules.find((m) => m.id === moduleId);
+        if (!module) {
+          return c.json({ message: "Module not found" }, 404);
+        }
+        module.lessons = module.lessons.filter((l) => l.id !== lessonId);
+        await course.save();
+    
+        return c.json(
+          {
+            message: "Lesson deleted successfully",
+            course,
+          },
+          200
+        );
+      } catch (error) {
+        console.error("Error deleting lesson:", error);
+        return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
+
+    //  add lesson
+    app.post("/api/addLesson/:courseId/:moduleId", async (c) => {
+      const courseId = c.req.param("courseId");
+      const moduleId = c.req.param("moduleId");
+      const { title, type } = await c.req.json();
+
+      if (!title || !type) {
+      return c.json({ message: "Lesson title and type are required" }, 400);
+      }
+
+      const lessonData = {
+      id: `lesson-${Date.now()}`, // Generate a unique ID for the lesson
+      title,
+      type,
+      content: "",
+      learningOutcomes: [],
+      additionalResources: [],
+      };
+
+      try {
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return c.json({ message: "Course not found" }, 404);
+      }
+      const module = course.modules.find((m) => m.id === moduleId);
+      if (!module) {
+        return c.json({ message: "Module not found" }, 404);
+      }
+      module.lessons.push(lessonData);
+      await course.save();
+
+      return c.json(
+        {
+        message: "Lesson added successfully",
+        course,
+        },
+        200
+      );
+      } catch (error) {
+      console.error("Error adding lesson:", error);
+      return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
 
 app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from Hono on Vercel!' });
@@ -94,7 +168,7 @@ app.get('/api/hello', (c) => {
 
 app.post("/api/post", async (c) => {
   const dummyData = {
-    _id: "course-12345", // Unique identifier for the course
+    id: "course-12345", // Unique identifier for the course
     image: "https://example.com/course-image.jpg", // URL for the course image
     title: "Introduction to TypeScript", // Title of the course
     description: "Learn the basics of TypeScript, a typed superset of JavaScript.", // Description of the course

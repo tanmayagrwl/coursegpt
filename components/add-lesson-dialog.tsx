@@ -17,13 +17,16 @@ import {
 } from "@/components/ui/dialog"
 import { FileText, CheckSquare, Beaker, Wand2, Loader2 } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import axios from "axios"
+import { set } from "mongoose"
 
-export default function AddLessonDialog({ trigger, onAddLesson }) {
+export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonDeleted }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [lessonTitle, setLessonTitle] = useState("")
   const [lessonType, setLessonType] = useState("lecture")
   const [aiPrompt, setAiPrompt] = useState("")
   const [aiDetails, setAiDetails] = useState("")
+  const [open, setOpen] = useState(false);
 
   const handleGenerateLesson = () => {
     if (!aiPrompt) return
@@ -38,18 +41,30 @@ export default function AddLessonDialog({ trigger, onAddLesson }) {
     }, 1500)
   }
 
-  const handleAddLesson = (e) => {
-    e.preventDefault()
-    if (onAddLesson && lessonTitle) {
-      onAddLesson({
+  const handleAddLesson = async () => {
+    if (!lessonTitle) return;
+
+    try {
+      // Assuming courseId and moduleId are props or coming from context/state
+      // You'll need to add these as props to the component
+      const response = await axios.post(`/api/addLesson/${courseId}/${moduleId}`, {
         title: lessonTitle,
-        type: lessonType,
-      })
+        type: lessonType
+      });
+
+      if (response.status === 200) {
+        onLessonDeleted()
+        setOpen(false)
+
+      }
+    } catch (error) {
+      console.error("Error adding lesson:", error);
+      // You might want to add error handling UI here
     }
   }
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={setOpen} open={open}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>

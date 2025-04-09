@@ -43,36 +43,42 @@ export default function CourseDetail() {
   const [activeModule, setActiveModule] = useState<string | null>(null)
   const [course, setCourse] = useState<Course | null>(null)
 
-  useEffect(() => {
-    async function fetchCourse() {
-      const response = await fetch(`/api/getCourse/${courseId}`)
-      const data: ApiCourse = await response.json()
-      
-      if (data) {
-        const mappedCourse: Course = {
-          id: data._id,
-          title: data.title,
-          description: data.description,
-          status: data.status === "Draft" || data.status === "Published" ? data.status : "Draft",
-          modules: data.modules.map((module: ApiModule) => ({
-            id: module._id,
-            title: module.title,
-            description: module.description,
-            lessons: module.lessons.map((lesson: ApiLesson) => ({
-              id: lesson._id,
-              title: lesson.title,
-              type: lesson.type,
-              difficultyLevel: lesson.difficultyLevel || 'Beginner',
-              content: lesson.content,
-              learningOutcomes: lesson.learningOutcomes || [],
-            })),
+  const fetchCourse = async () => {
+    const response = await fetch(`/api/getCourse/${courseId}`);
+    const data: ApiCourse = await response.json();
+    
+    if (data) {
+      const mappedCourse: Course = {
+        id: data._id,
+        title: data.title,
+        description: data.description,
+        status: data.status === "Draft" || data.status === "Published" ? data.status : "Draft",
+        modules: data.modules.map((module: ApiModule) => ({
+          id: module._id,
+          title: module.title,
+          description: module.description,
+          lessons: module.lessons.map((lesson: ApiLesson) => ({
+            id: lesson._id,
+            title: lesson.title,
+            type: lesson.type,
+            difficultyLevel: lesson.difficultyLevel || 'Beginner',
+            content: lesson.content,
+            learningOutcomes: lesson.learningOutcomes || [],
           })),
-        }
-        setCourse(mappedCourse)
-      }
+        })),
+      };
+      setCourse(mappedCourse);
     }
-    fetchCourse()
-  }, [courseId])
+  };
+
+  useEffect(() => {
+    fetchCourse();
+  }, [courseId]);
+
+  // Function to handle lesson deletion refresh
+  const handleLessonDeleted = () => {
+    fetchCourse(); // Refetch the course data
+  };
 
   const toggleCourseStatus = async () => {
     if (!course) return;
@@ -216,7 +222,11 @@ export default function CourseDetail() {
 
               <div className="lg:col-span-2">
                 {activeModule ? (
-                  <ModuleEditor module={course.modules.find((m) => m.id === activeModule)} />
+                   <ModuleEditor 
+                   courseId={courseId} 
+                   module={course.modules.find((m) => m.id === activeModule)} 
+                   onLessonDeleted={handleLessonDeleted}
+                 />
                 ) : (
                   <Card>
                     <CardContent className="py-12 flex flex-col items-center justify-center text-center">

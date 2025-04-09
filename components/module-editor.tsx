@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Plus,
   Wand2,
@@ -18,52 +18,102 @@ import {
   ImageIcon,
   Video,
   FileIcon,
-} from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import AddLessonDialog from "@/components/add-lesson-dialog"
-import MediaUploadDialog from "@/components/media-upload-dialog"
-import MediaBadge from "@/components/media-badge"
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import AddLessonDialog from "@/components/add-lesson-dialog";
+import MediaUploadDialog from "@/components/media-upload-dialog";
+import MediaBadge from "@/components/media-badge";
+import axios from "axios";
 
-export default function ModuleEditor({ module }) {
-  const [isGeneratingLesson, setIsGeneratingLesson] = useState(false)
-  const [selectedLesson, setSelectedLesson] = useState<{ id: string; content: string; type: string; title: string } | null>(null)
-  console.log("Selected lesson:", selectedLesson)
-  const [mediaBadges, setMediaBadges] = useState([])
-  console.log("Set selected lesson:", setSelectedLesson)
+export default function ModuleEditor({ module, courseId, onLessonDeleted }) {
+  console.log("ModuleEditor props:", module, courseId);
+  const [isGeneratingLesson, setIsGeneratingLesson] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<{
+    id: string;
+    content: string;
+    type: string;
+    title: string;
+    learningOutcomes: string[];
+    additionalResources: {
+      title: string;
+      url: string;
+      type: string;
+    }[];
+  } | null>(null);
+  console.log("Module", module);
+  console.log("Selected lesson:", selectedLesson);
+  const [mediaBadges, setMediaBadges] = useState([]);
+  console.log("Set selected lesson:", setSelectedLesson);
   const handleGenerateLesson = () => {
-    setIsGeneratingLesson(true)
+    setIsGeneratingLesson(true);
     // Simulate AI generation
     setTimeout(() => {
-      setIsGeneratingLesson(false)
-    }, 2000)
-  }
+      setIsGeneratingLesson(false);
+    }, 2000);
+  };
+
+  const handleDeleteLesson = async (lessonId: string) => {
+    if (!courseId || !module.id || !lessonId) {
+      console.error("Missing required parameters for deleting a lesson.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/deleteLesson/${courseId}/${module.id}/${lessonId}`,
+      );
+      console.log("Lesson deleted successfully:", response.data);
+      onLessonDeleted();
+      setSelectedLesson(null);
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+    }
+  };
 
   const getLessonIcon = (type) => {
     switch (type) {
       case "lecture":
-        return <FileText className="h-4 w-4 text-blue-500" />
+        return <FileText className="h-4 w-4 text-blue-500" />;
       case "quiz":
-        return <CheckSquare className="h-4 w-4 text-purple-500" />
+        return <CheckSquare className="h-4 w-4 text-purple-500" />;
       case "lab":
-        return <Beaker className="h-4 w-4 text-amber-500" />
+        return <Beaker className="h-4 w-4 text-amber-500" />;
       default:
-        return <FileText className="h-4 w-4" />
+        return <FileText className="h-4 w-4" />;
     }
-  }
+  };
 
   const getLessonTypeBadge = (type) => {
     switch (type) {
       case "lecture":
-        return <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Lecture</span>
+        return (
+          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+            Lecture
+          </span>
+        );
       case "quiz":
-        return <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Quiz</span>
+        return (
+          <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+            Quiz
+          </span>
+        );
       case "lab":
-        return <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Lab</span>
+        return (
+          <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
+            Lab
+          </span>
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -80,16 +130,15 @@ export default function ModuleEditor({ module }) {
             <h4 className="font-medium">Lessons</h4>
             <div className="flex gap-2">
               <AddLessonDialog
+                courseId={courseId}
+                moduleId={module.id}
+                onLessonDeleted={onLessonDeleted}
                 trigger={
                   <Button size="sm" variant="outline">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Lesson
                   </Button>
                 }
-                onAddLesson={(newLesson) => {
-                  // Here you would typically update the lessons list
-                  console.log("New lesson:", newLesson)
-                }}
               />
 
               <Button size="sm" variant="outline">
@@ -101,28 +150,39 @@ export default function ModuleEditor({ module }) {
 
           <div className="space-y-2">
             {module.lessons.map((lesson) => (
-                <div
+              <div
                 key={lesson.id}
                 className={`border rounded-md p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 ${
-                  selectedLesson?.id === lesson.id ? "border-emerald-500 bg-emerald-50" : ""
+                  selectedLesson?.id === lesson.id
+                    ? "border-emerald-500 bg-emerald-50"
+                    : ""
                 }`}
-                onClick={() => setSelectedLesson(selectedLesson?.id === lesson.id ? null : lesson)}
-                >
+                onClick={() =>
+                  setSelectedLesson(
+                    selectedLesson?.id === lesson.id ? null : lesson,
+                  )
+                }
+              >
                 <div className="text-gray-400 cursor-grab">
                   <GripVertical className="h-5 w-5" />
                 </div>
                 {getLessonIcon(lesson.type)}
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                  <span className="font-medium">{lesson.title}</span>
-                  {getLessonTypeBadge(lesson.type)}
+                    <span className="font-medium">{lesson.title}</span>
+                    {getLessonTypeBadge(lesson.type)}
                   </div>
                 </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-red-500"
+                    onClick={() => handleDeleteLesson(lesson.id)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -140,7 +200,9 @@ export default function ModuleEditor({ module }) {
             <Tabs defaultValue="content" className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="content">Content</TabsTrigger>
-                <TabsTrigger value="learning-outcomes">Learning Outcomes</TabsTrigger>
+                <TabsTrigger value="learning-outcomes">
+                  Learning Outcomes
+                </TabsTrigger>
                 <TabsTrigger value="resources">Resources</TabsTrigger>
               </TabsList>
 
@@ -156,42 +218,54 @@ export default function ModuleEditor({ module }) {
                   <MediaUploadDialog
                     type="image"
                     trigger={
-                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
                         <ImageIcon className="h-4 w-4" />
                         <span>Add Image</span>
                       </Button>
                     }
                     onUpload={(media) => {
-                      console.log("Image added:", media)
-                      setMediaBadges([...mediaBadges, media])
+                      console.log("Image added:", media);
+                      setMediaBadges([...mediaBadges, media]);
                       // Here you would typically insert the image into the editor
                     }}
                   />
                   <MediaUploadDialog
                     type="video"
                     trigger={
-                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
                         <Video className="h-4 w-4" />
                         <span>Add Video</span>
                       </Button>
                     }
                     onUpload={(media) => {
-                      console.log("Video added:", media)
-                      setMediaBadges([...mediaBadges, media])
+                      console.log("Video added:", media);
+                      setMediaBadges([...mediaBadges, media]);
                       // Here you would typically insert the video into the editor
                     }}
                   />
                   <MediaUploadDialog
                     type="file"
                     trigger={
-                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
                         <FileIcon className="h-4 w-4" />
                         <span>Add File</span>
                       </Button>
                     }
                     onUpload={(media) => {
-                      console.log("File added:", media)
-                      setMediaBadges([...mediaBadges, media])
+                      console.log("File added:", media);
+                      setMediaBadges([...mediaBadges, media]);
                       // Here you would typically insert a link to the file into the editor
                     }}
                   />
@@ -199,17 +273,21 @@ export default function ModuleEditor({ module }) {
 
                 {mediaBadges.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3 p-2 border rounded-md bg-gray-50">
-                    <div className="text-xs font-medium text-gray-500 mr-2 flex items-center">Inserted Media:</div>
+                    <div className="text-xs font-medium text-gray-500 mr-2 flex items-center">
+                      Inserted Media:
+                    </div>
                     {mediaBadges.map((media) => (
                       <MediaBadge
                         key={media.id}
                         media={media}
                         onRemove={(id) => {
-                          setMediaBadges(mediaBadges.filter((m) => m.id !== id))
+                          setMediaBadges(
+                            mediaBadges.filter((m) => m.id !== id),
+                          );
                         }}
                         onInsert={(media) => {
                           // Here you would typically focus the editor and insert the media
-                          console.log("Insert media:", media.insertText)
+                          console.log("Insert media:", media.insertText);
                         }}
                       />
                     ))}
@@ -239,35 +317,33 @@ export default function ModuleEditor({ module }) {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-3 border rounded-md">
-                    <Input defaultValue="Define machine learning and explain its importance" className="flex-1" />
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {selectedLesson?.learningOutcomes?.map((outcome, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 p-3 border rounded-md"
+                    >
+                      <Input
+                        defaultValue={outcome}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="flex items-center gap-2 p-3 border rounded-md">
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
                     <Input
-                      defaultValue="Identify the different types of machine learning approaches"
+                      placeholder="Enter new learning outcome..."
                       className="flex-1"
                     />
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-3 border rounded-md">
-                    <Input defaultValue="Explain the key components of a machine learning system" className="flex-1" />
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Input placeholder="Enter new learning outcome..." className="flex-1" />
-                      <Button size="sm">Add</Button>
-                    </div>
+                    <Button size="sm">Add</Button>
                   </div>
                 </div>
               </TabsContent>
@@ -282,32 +358,30 @@ export default function ModuleEditor({ module }) {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-3 border rounded-md">
-                    <div className="flex-1">
-                      <div className="font-medium">Introduction to Machine Learning with Python</div>
-                      <div className="text-sm text-gray-500">Book by Andreas C. Müller & Sarah Guido</div>
+                  {selectedLesson?.additionalResources?.map((resource, index) => (
+                    <div key={index} className="flex items-center gap-2 p-3 border rounded-md">
+                      <div className="flex-1">
+                        <div className="font-medium">{resource.title}</div>
+                        <div className="text-sm text-gray-500">{resource.url}</div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-3 border rounded-md">
-                    <div className="flex-1">
-                      <div className="font-medium">Machine Learning Crash Course</div>
-                      <div className="text-sm text-gray-500">Google's fast-paced, practical introduction to ML</div>
-                    </div>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  ))}
 
                   <div className="mt-2 space-y-2">
                     <div className="p-3 border rounded-md">
                       <div className="space-y-2">
-                        <Input placeholder="Resource title" className="w-full" />
+                        <Input
+                          placeholder="Resource title"
+                          className="w-full"
+                        />
                         <div className="flex gap-2">
-                          <Input placeholder="URL or location" className="flex-1" />
+                          <Input
+                            placeholder="URL or location"
+                            className="flex-1"
+                          />
                           <Select defaultValue="article">
                             <SelectTrigger className="w-[120px]">
                               <SelectValue placeholder="Type" />
@@ -333,5 +407,5 @@ export default function ModuleEditor({ module }) {
         </Card>
       )}
     </div>
-  )
+  );
 }
