@@ -209,6 +209,55 @@ dbConnect()
       }
     });
 
+    // create a new course
+    app.post("/api/createCourse", async (c) => {
+      try {
+        const {
+          title,
+          description,
+          category,
+          difficultyLevel,
+          thumbnail,
+          status,
+          modules = []
+        } = await c.req.json();
+
+        // Validate required fields
+        if (!title || !category || !difficultyLevel) {
+          return c.json({
+            message: "Title, category, and difficulty level are required"
+          }, 400);
+        }
+
+        // Create course object
+        const courseData = {
+          title,
+          description: description || "",
+          category,
+          difficultyLevel,
+          thumbnail: thumbnail || "",
+          status: status || "Draft",
+          modules: modules.map(module => ({
+            ...module,
+            id: module.id || `module-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          })),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        const course = new Course(courseData);
+        const savedCourse = await course.save();
+
+        return c.json({
+          message: "Course created successfully",
+          course: savedCourse
+        }, 201);
+      } catch (error) {
+        console.error("Error creating course:", error);
+        return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
+
 app.get('/api/hello', (c) => {
   return c.json({ message: 'Hello from Hono on Vercel!' });
 });

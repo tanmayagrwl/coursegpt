@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,7 +102,7 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }: Modu
     }
   };
 
-  const handleUpdateLesson = async (updatedLesson) => {
+  const handleUpdateLesson = async (updatedLesson: Lesson) => {
     if (!courseId || !module.id || !selectedLesson?.id) {
       console.error("Missing required parameters for updating a lesson.");
       return;
@@ -447,7 +446,7 @@ export default function ModuleEditor({ module, courseId, onLessonDeleted }: Modu
                       size="sm"
                       onClick={() => {
                         const input = document.querySelector<HTMLInputElement>(".learning-outcome-input");
-                        if (input && input.value.trim()) {
+                        if (input?.value.trim()) {
                           setSelectedLesson({
                             ...selectedLesson,
                             learningOutcomes: [...selectedLesson.learningOutcomes, input.value.trim()],

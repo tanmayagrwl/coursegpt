@@ -15,7 +15,11 @@ export default function NewCourse() {
   const router = useRouter()
   const [courseTitle, setCourseTitle] = useState("")
   const [courseDescription, setCourseDescription] = useState("")
+  const [category, setCategory] = useState("")
+  const [difficultyLevel, setDifficultyLevel] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState("")
 
   const handleGenerateDescription = () => {
     if (!courseTitle) return
@@ -30,10 +34,46 @@ export default function NewCourse() {
     }, 1500)
   }
 
-  const handleCreateCourse = (e) => {
+  const handleCreateCourse = async (e) => {
     e.preventDefault()
-    // Here you would typically save the course to your backend
-    router.push("/courses/1") // Redirect to the new course page
+    setError("")
+    
+    if (!courseTitle || !category || !difficultyLevel) {
+      setError("Title, category, and difficulty level are required")
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const response = await fetch("/api/createCourse", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: courseTitle,
+          description: courseDescription,
+          category,
+          difficultyLevel,
+          status: "Draft",
+          modules: []
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to create course")
+      }
+
+      const { course } = await response.json()
+      router.push(`/courses/${course._id}`)
+    } catch (err) {
+      console.error("Error creating course:", err)
+      setError(err.message || "An error occurred while creating the course")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -46,9 +86,12 @@ export default function NewCourse() {
               <span>Back to Dashboard</span>
             </Link>
           </div>
-          <Button onClick={handleCreateCourse} disabled={!courseTitle}>
+          <Button 
+            onClick={handleCreateCourse} 
+            disabled={!courseTitle || isSubmitting}
+          >
             <Save className="h-4 w-4 mr-2" />
-            Create Course
+            {isSubmitting ? "Creating..." : "Create Course"}
           </Button>
         </div>
       </header>
@@ -56,9 +99,13 @@ export default function NewCourse() {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-6">Create New Course</h1>
 
-        <Tabs defaultValue="details" className="w-full">
-        
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
 
+        <Tabs defaultValue="details" className="w-full">
           <TabsContent value="details">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
@@ -66,12 +113,13 @@ export default function NewCourse() {
                   <CardContent className="pt-6">
                     <form className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="title">Course Title</Label>
+                        <Label htmlFor="title">Course Title*</Label>
                         <Input
                           id="title"
                           placeholder="e.g., Introduction to Data Science"
                           value={courseTitle}
                           onChange={(e) => setCourseTitle(e.target.value)}
+                          required
                         />
                       </div>
 
@@ -101,12 +149,24 @@ export default function NewCourse() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="category">Category</Label>
-                          <Input id="category" placeholder="e.g., Programming" />
+                          <Label htmlFor="category">Category*</Label>
+                          <Input 
+                            id="category" 
+                            placeholder="e.g., Programming" 
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                            required
+                          />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="level">Difficulty Level</Label>
-                          <Input id="level" placeholder="e.g., Beginner" />
+                          <Label htmlFor="level">Difficulty Level*</Label>
+                          <Input 
+                            id="level" 
+                            placeholder="e.g., Beginner" 
+                            value={difficultyLevel}
+                            onChange={(e) => setDifficultyLevel(e.target.value)}
+                            required
+                          />
                         </div>
                       </div>
                     </form>
