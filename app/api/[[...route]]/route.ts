@@ -284,96 +284,40 @@ dbConnect()
       }
     });
 
-app.get('/api/hello', (c) => {
-  return c.json({ message: 'Hello from Hono on Vercel!' });
-});
+    // add a module to a course
+    app.post("/api/addModule/:courseId", async (c) => {
+      const courseId = c.req.param("courseId");
+      const { title, description } = await c.req.json();
 
+      if (!title) {
+        return c.json({ message: "Module title is required" }, 400);
+      }
 
-app.post("/api/post", async (c) => {
-  const dummyData = {
-    id: "course-12345", // Unique identifier for the course
-    image: "https://example.com/course-image.jpg", // URL for the course image
-    title: "Introduction to TypeScript", // Title of the course
-    description: "Learn the basics of TypeScript, a typed superset of JavaScript.", // Description of the course
-    category: "Programming", // Category of the course
-    difficultyLevel: "Beginner", // Difficulty level
-    thumbnail: "https://example.com/thumbnail.jpg", // URL for the course thumbnail
-    status: "Published", // Status of the course
-    modules: [
-      {
-        id: "module-1", // Unique identifier for the module
-        title: "Getting Started with TypeScript", // Title of the module
-        description: "An introduction to TypeScript and its key features.", // Description of the module
-        lessons: [
-          {
-            id: "lesson-1", // Unique identifier for the lesson
-            title: "What is TypeScript?", // Title of the lesson
-            type: "lecture", // Type of lesson
-            content: "TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.", // Content of the lesson
-            learningOutcomes: [
-              "Understand what TypeScript is",
-              "Learn the benefits of using TypeScript",
-            ], // Array of learning outcomes
-            additionalResources: [
-              {
-                title: "Official TypeScript Documentation", // Title of the resource
-                url: "https://www.typescriptlang.org/docs/", // URL for the resource
-              },
-            ], // Array of additional resources
-          },
-          {
-            id: "lesson-2", // Unique identifier for the lesson
-            title: "Setting Up TypeScript", // Title of the lesson
-            type: "lab", // Type of lesson
-            content: "Learn how to set up TypeScript in your development environment.", // Content of the lesson
-            learningOutcomes: [
-              "Install TypeScript",
-              "Set up a TypeScript project",
-            ], // Array of learning outcomes
-            additionalResources: [
-              {
-                title: "TypeScript Setup Guide", // Title of the resource
-                url: "https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html", // URL for the resource
-              },
-            ], // Array of additional resources
-          },
-        ], // Array of lessons
-      },
-      {
-        id: "module-2", // Unique identifier for the module
-        title: "TypeScript Basics", // Title of the module
-        description: "Learn the basic syntax and features of TypeScript.", // Description of the module
-        lessons: [
-          {
-            id: "lesson-3", // Unique identifier for the lesson
-            title: "Type Annotations", // Title of the lesson
-            type: "lecture", // Type of lesson
-            content: "Learn how to use type annotations in TypeScript.", // Content of the lesson
-            learningOutcomes: [
-              "Understand type annotations",
-              "Learn how to use basic types in TypeScript",
-            ], // Array of learning outcomes
-            additionalResources: [
-              {
-                title: "TypeScript Basic Types", // Title of the resource
-                url: "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html", // URL for the resource
-              },
-            ], // Array of additional resources
-          },
-        ], // Array of lessons
-      },
-    ], // Array of modules
-    createdAt: new Date(), // Timestamp for course creation
-    updatedAt: new Date(), // Timestamp for course updates
-  };
-  try {
-    const course = new Course(dummyData);
-    const document = await course.save();
-    return c.json(document, 200);
-  } catch (error) {
-    return c.json((error as any)?.message || "Internal server error", 500);
-  }
-});
+      try {
+        const course = await Course.findById(courseId);
+        if (!course) {
+          return c.json({ message: "Course not found" }, 404);
+        }
+
+        const moduleData = {
+          id: `module-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title,
+          description: description || "",
+          lessons: []
+        };
+
+        course.modules.push(moduleData);
+        await course.save();
+
+        return c.json({
+          message: "Module added successfully",
+          course
+        }, 200);
+      } catch (error) {
+        console.error("Error adding module:", error);
+        return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
 
 
 export const GET = handle(app);

@@ -17,11 +17,49 @@ import {
 } from "@/components/ui/dialog"
 import { Wand2, Loader2 } from "lucide-react"
 
-export default function AddModuleDialog({ trigger, onAddModule }) {
+export default function AddModuleDialog({ trigger, courseId, handleRefresh}) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [moduleTitle, setModuleTitle] = useState("")
   const [moduleDescription, setModuleDescription] = useState("")
   const [aiPrompt, setAiPrompt] = useState("")
+
+
+  const handleAddModule = async () => {
+    
+    if (!moduleTitle) return;
+    
+    try {
+      // Replace with your actual course ID and API endpoint
+
+      
+      const response = await fetch(`/api/addModule/${courseId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: moduleTitle,
+          description: moduleDescription,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to add module');
+      }
+      
+      handleRefresh()
+      
+      // Reset form
+      setModuleTitle("");
+      setModuleDescription("");
+      setAiPrompt("");
+      
+    } catch (error) {
+      console.error("Error adding module:", error);
+      // You might want to add error handling UI here
+    }
+  };
 
   const handleGenerateModule = () => {
     if (!aiPrompt) return
@@ -36,17 +74,6 @@ export default function AddModuleDialog({ trigger, onAddModule }) {
       )
       setIsGenerating(false)
     }, 1500)
-  }
-
-  const handleAddModule = (e) => {
-    e.preventDefault()
-    if (onAddModule && moduleTitle) {
-      onAddModule({
-        title: moduleTitle,
-        description: moduleDescription,
-        lessons: [],
-      })
-    }
   }
 
   return (
