@@ -160,11 +160,8 @@ app.post("/generate", async (c) => {
 	}
 });
 
-app.post("/generateLessons/:courseId/:moduleId/:lessonId", async (c) => {
+app.post("/generateLessons/", async (c) => {
 	const { title } = await c.req.json();
-	const courseId = c.req.param("courseId");
-	const moduleId = c.req.param("moduleId");
-	const lessonId = c.req.param("lessonId");
 
 
 	if (!title) {
