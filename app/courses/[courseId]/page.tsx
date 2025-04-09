@@ -1,53 +1,113 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Settings, Play, Plus, Trash2, MoveUp, MoveDown, Edit, Wand2, MoreHorizontal } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, MoveUp, MoveDown, Edit, Wand2, MoreHorizontal } from "lucide-react"
 import ModuleEditor from "@/components/module-editor"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import AddModuleDialog from "@/components/add-module-dialog"
-import { Course } from "@/types/types"
+import type { Course, Module } from "@/types/types"
+import { useParams } from 'next/navigation'
 
-export default function CourseDetail({ params }) {
+interface ApiLesson {
+  _id: string;
+  title: string;
+  type: string;
+  difficultyLevel?: string;
+  content: string;
+  learningOutcomes?: string[];
+}
+
+interface ApiModule {
+  _id: string;
+  title: string;
+  description: string;
+  lessons: ApiLesson[];
+}
+
+interface ApiCourse {
+  _id: string;
+  title: string;
+  description: string;
+  status: string;
+  modules: ApiModule[];
+}
+
+export default function CourseDetail() {
+  const { courseId } = useParams<{ courseId: string }>();
   const [activeTab, setActiveTab] = useState("modules")
-  const [activeModule, setActiveModule] = useState(null)
+  const [activeModule, setActiveModule] = useState<string | null>(null)
+  const [course, setCourse] = useState<Course | null>(null)
 
-  const course: Course = {
-    id: params.courseId,
-    title: "Introduction to Machine Learning",
-    description: "Learn the fundamentals of machine learning algorithms and applications",
-    modules: [
-      {
-        id: "m1",
-        title: "Getting Started with Machine Learning",
-        description: "An introduction to key concepts and terminology",
-        lessons: [
-          { id: "l1", title: "What is Machine Learning?", type: "lecture" },
-          { id: "l2", title: "Types of Machine Learning", type: "lecture" },
-          { id: "l3", title: "Machine Learning Applications", type: "lecture" },
-          { id: "l4", title: "Module Quiz", type: "quiz" },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Supervised Learning",
-        description: "Understanding supervised learning algorithms and use cases",
-        lessons: [
-          { id: "l5", title: "Classification Algorithms", type: "lecture" },
-          { id: "l6", title: "Regression Algorithms", type: "lecture" },
-          { id: "l7", title: "Evaluation Metrics", type: "lecture" },
-          { id: "l8", title: "Practical Exercise", type: "lab" },
-        ],
-      },
-    ],
+  useEffect(() => {
+    async function fetchCourse() {
+      const response = await fetch(`/api/getCourse/${courseId}`)
+      const data: ApiCourse = await response.json()
+      
+      if (data) {
+        const mappedCourse: Course = {
+          id: data._id,
+          title: data.title,
+          description: data.description,
+          status: data.status === "Draft" || data.status === "Published" ? data.status : "Draft",
+          modules: data.modules.map((module: ApiModule) => ({
+            id: module._id,
+            title: module.title,
+            description: module.description,
+            lessons: module.lessons.map((lesson: ApiLesson) => ({
+              id: lesson._id,
+              title: lesson.title,
+              type: lesson.type,
+              difficultyLevel: lesson.difficultyLevel || 'Beginner',
+              content: lesson.content,
+              learningOutcomes: lesson.learningOutcomes || [],
+            })),
+          })),
+        }
+        setCourse(mappedCourse)
+      }
+    }
+    fetchCourse()
+  }, [courseId])
+
+  const toggleCourseStatus = async () => {
+    if (!course) return;
+  
+    try {
+      const response = await fetch(`/api/togglePublish/${course.id}`, {
+        method: "POST",
+      });
+      console.log("toggleCourseStatus", response)
+      if (!response.ok) {
+        throw new Error(`Failed to toggle course status: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+  
+      if (data) {
+        setCourse((prevCourse) => {
+          if (!prevCourse) return null;
+          return {
+            ...prevCourse,
+            status: prevCourse.status === "Draft" ? "Published" : "Draft",
+          };
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling course status:", error);
+    }
+  };
+
+  const handleModuleClick = (moduleId: string) => {
+    setActiveModule(moduleId === activeModule ? null : moduleId)
   }
 
-  const handleModuleClick = (moduleId) => {
-    setActiveModule(moduleId === activeModule ? null : moduleId)
+  if (!course) {
+    return <div>Loading...</div>
   }
 
   return (
@@ -55,20 +115,10 @@ export default function CourseDetail({ params }) {
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2 py-1">
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Dashboard</span>
             </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button size="sm">
-              <Play className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
           </div>
         </div>
       </header>
@@ -78,11 +128,11 @@ export default function CourseDetail({ params }) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-2xl font-bold">{course.title}</h1>
-              <Badge>Draft</Badge>
+              <Badge>{course.status || "Draft"}</Badge>
             </div>
             <p className="text-gray-600">{course.description}</p>
           </div>
-          <Button className="mt-4 md:mt-0 bg-emerald-600 hover:bg-emerald-700">Publish Course</Button>
+          <Button className="mt-4 md:mt-0 bg-emerald-600 hover:bg-emerald-700" onClick={toggleCourseStatus}>{course.status === "Published"? "Draft Course" : "Publish Course"}</Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -100,9 +150,14 @@ export default function CourseDetail({ params }) {
                             Add Module
                           </Button>
                         }
-                        onAddModule={(newModule) => {
-                          // Here you would typically update the modules list
-                          console.log("New module:", newModule)
+                        onAddModule={(newModule: Module) => {
+                          setCourse((prevCourse) => {
+                            if (!prevCourse) return null;
+                            return {
+                              ...prevCourse,
+                              modules: [...prevCourse.modules, newModule],
+                            };
+                          });
                         }}
                       />
                     </div>
@@ -115,6 +170,11 @@ export default function CourseDetail({ params }) {
                             activeModule === module.id ? "border-emerald-500 bg-emerald-50" : "hover:bg-gray-50"
                           }`}
                           onClick={() => handleModuleClick(module.id)}
+                          onKeyUp={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              handleModuleClick(module.id);
+                            }
+                          }}
                         >
                           <div className="flex justify-between items-start">
                             <div>
@@ -174,9 +234,11 @@ export default function CourseDetail({ params }) {
                             Create New Module
                           </Button>
                         }
-                        onAddModule={(newModule) => {
-                          // Here you would typically update the modules list
-                          console.log("New module:", newModule)
+                        onAddModule={(newModule : ApiModule) => {
+                          setCourse((prevCourse) => ({
+                            ...prevCourse!,
+                            modules: [...prevCourse!.modules, newModule],
+                          }))
                         }}
                       />
                     </CardContent>

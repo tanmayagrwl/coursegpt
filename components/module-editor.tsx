@@ -26,9 +26,8 @@ import MediaUploadDialog from "@/components/media-upload-dialog"
 import MediaBadge from "@/components/media-badge"
 
 export default function ModuleEditor({ module }) {
-  console.log("Module:", module)
   const [isGeneratingLesson, setIsGeneratingLesson] = useState(false)
-  const [selectedLesson, setSelectedLesson] = useState(null)
+  const [selectedLesson, setSelectedLesson] = useState<{ id: string; content: string; type: string; title: string } | null>(null)
   console.log("Selected lesson:", selectedLesson)
   const [mediaBadges, setMediaBadges] = useState([])
   console.log("Set selected lesson:", setSelectedLesson)
@@ -75,10 +74,6 @@ export default function ModuleEditor({ module }) {
               <h3 className="text-lg font-medium">{module.title}</h3>
               <p className="text-gray-500">{module.description}</p>
             </div>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Module
-            </Button>
           </div>
 
           <div className="flex justify-between items-center mb-4 mt-6">
@@ -106,21 +101,21 @@ export default function ModuleEditor({ module }) {
 
           <div className="space-y-2">
             {module.lessons.map((lesson) => (
-              <div
+                <div
                 key={lesson.id}
                 className={`border rounded-md p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 ${
-                  selectedLesson === lesson.id ? "border-emerald-500 bg-emerald-50" : ""
+                  selectedLesson?.id === lesson.id ? "border-emerald-500 bg-emerald-50" : ""
                 }`}
-                onClick={() => setSelectedLesson(lesson.id === selectedLesson ? null : lesson.id)}
-              >
+                onClick={() => setSelectedLesson(selectedLesson?.id === lesson.id ? null : lesson)}
+                >
                 <div className="text-gray-400 cursor-grab">
                   <GripVertical className="h-5 w-5" />
                 </div>
                 {getLessonIcon(lesson.type)}
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{lesson.title}</span>
-                    {getLessonTypeBadge(lesson.type)}
+                  <span className="font-medium">{lesson.title}</span>
+                  {getLessonTypeBadge(lesson.type)}
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -225,24 +220,7 @@ export default function ModuleEditor({ module }) {
                   placeholder="Enter lesson content here..."
                   rows={12}
                   className="font-mono text-sm"
-                  defaultValue={`# Introduction to Machine Learning
-
-## What is Machine Learning?
-
-Machine learning is a subset of artificial intelligence that focuses on developing systems that can learn from and make decisions based on data. Unlike traditional programming, where explicit instructions are provided, machine learning algorithms build models based on sample data to make predictions or decisions without being explicitly programmed to do so.
-
-## Key Concepts
-
-1. **Training Data**: The dataset used to train the machine learning model.
-2. **Features**: The input variables or attributes used for prediction.
-3. **Labels**: The output or target variable that the model predicts.
-4. **Model**: The mathematical representation learned from the data.
-
-## Types of Machine Learning
-
-- **Supervised Learning**: Learning from labeled training data
-- **Unsupervised Learning**: Finding patterns in unlabeled data
-- **Reinforcement Learning**: Learning through interaction with an environment`}
+                  value={selectedLesson.content}
                 />
 
                 <div className="flex justify-end gap-2">

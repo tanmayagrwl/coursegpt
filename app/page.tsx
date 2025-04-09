@@ -16,9 +16,27 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { BASE_URL } from "@/lib/utils"
 
 export default function Dashboard() {
+
+  // const [courses, setCourses] = useState([])
+
+  // useEffect(() => {
+  //   async function fetchCourses() {
+  //     try {
+  //       const response = await axios.get(`${BASE_URL}/api/getAllCourses`)
+  //       console.log("fetchCourses", response.data)
+  //       setCourses(response.data)
+  //     } catch (error) {
+  //       console.error("Error fetching courses:", error)
+  //     }
+  //   }
+
+  //   fetchCourses()
+  // }, [])
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">

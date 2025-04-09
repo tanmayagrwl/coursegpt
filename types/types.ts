@@ -3,6 +3,11 @@ export interface Lesson {
     title: string; // Title of the lesson
     type: 'lecture' | 'quiz' | 'lab'; // Type of lesson
     content?: string; // Optional content for the lesson
+    learningOutcomes?: string[]; // Array of learning outcomes
+    additionalResources?: {
+      title: string; // Title of the resource
+      url: string; // URL for the resource
+    }[]; // Array of additional resources
   }
   
   // Module Type
@@ -16,6 +21,7 @@ export interface Lesson {
   // Course Type
   export interface Course {
     id: string; // Unique identifier for the course
+    image?: string; // URL for the course image
     title: string; // Title of the course
     description?: string; // Description of the course
     category: string; // Category of the course (e.g., Programming, Data Science)

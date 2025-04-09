@@ -41,12 +41,50 @@ app.post('/generate', async (c) => {
 
 dbConnect()
   .then(() => {
-    // get all notes
-    app.get("/api/log", async (c) => {
+    // get all courses
+    app.get("/api/getAllCourses", async (c) => {
       const course = await Course.find()
         return c.json(course, 200)
       });
     })
+
+    // get course by course ID
+    app.get("/api/getCourse/:id", async (c) => {
+      const courseId = c.req.param("id");
+      try {
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return c.json({ message: "Course not found" }, 404);
+      }
+      return c.json(course, 200);
+      } catch (error) {
+      return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
+
+    app.post("/api/test", (c) => c.json({ message: "PUT works!" }));
+
+    // make course Draft
+    app.post("/api/togglePublish/:id", async (c) => {
+      try {
+        const courseId = c.req.param("id");
+        const course = await Course.findById(courseId);
+        if (!course) {
+          return c.json({ message: "Course not found" }, 404);
+        }
+    
+        course.status = course.status === "Draft" ? "Published" : "Draft";
+        await course.save();
+    
+        return c.json({
+          message: `Course status updated to ${course.status}`,
+          course,
+        }, 200);
+      } catch (error) {
+        console.error(error);
+        return c.json((error as any)?.message || "Internal server error", 500);
+      }
+    });
 
 
 app.get('/api/hello', (c) => {
@@ -56,17 +94,81 @@ app.get('/api/hello', (c) => {
 
 app.post("/api/post", async (c) => {
   const dummyData = {
-    title: "Introduction to TypeScript",
-    description: "Learn the basics of TypeScript, a typed superset of JavaScript.",
-    category: "Programming",
-    difficultyLevel: "Beginner",
-    thumbnail: "https://example.com/thumbnail.jpg",
-    status: "Published",
-    modules: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    _id: "course-12345", // Unique identifier for the course
+    image: "https://example.com/course-image.jpg", // URL for the course image
+    title: "Introduction to TypeScript", // Title of the course
+    description: "Learn the basics of TypeScript, a typed superset of JavaScript.", // Description of the course
+    category: "Programming", // Category of the course
+    difficultyLevel: "Beginner", // Difficulty level
+    thumbnail: "https://example.com/thumbnail.jpg", // URL for the course thumbnail
+    status: "Published", // Status of the course
+    modules: [
+      {
+        id: "module-1", // Unique identifier for the module
+        title: "Getting Started with TypeScript", // Title of the module
+        description: "An introduction to TypeScript and its key features.", // Description of the module
+        lessons: [
+          {
+            id: "lesson-1", // Unique identifier for the lesson
+            title: "What is TypeScript?", // Title of the lesson
+            type: "lecture", // Type of lesson
+            content: "TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.", // Content of the lesson
+            learningOutcomes: [
+              "Understand what TypeScript is",
+              "Learn the benefits of using TypeScript",
+            ], // Array of learning outcomes
+            additionalResources: [
+              {
+                title: "Official TypeScript Documentation", // Title of the resource
+                url: "https://www.typescriptlang.org/docs/", // URL for the resource
+              },
+            ], // Array of additional resources
+          },
+          {
+            id: "lesson-2", // Unique identifier for the lesson
+            title: "Setting Up TypeScript", // Title of the lesson
+            type: "lab", // Type of lesson
+            content: "Learn how to set up TypeScript in your development environment.", // Content of the lesson
+            learningOutcomes: [
+              "Install TypeScript",
+              "Set up a TypeScript project",
+            ], // Array of learning outcomes
+            additionalResources: [
+              {
+                title: "TypeScript Setup Guide", // Title of the resource
+                url: "https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html", // URL for the resource
+              },
+            ], // Array of additional resources
+          },
+        ], // Array of lessons
+      },
+      {
+        id: "module-2", // Unique identifier for the module
+        title: "TypeScript Basics", // Title of the module
+        description: "Learn the basic syntax and features of TypeScript.", // Description of the module
+        lessons: [
+          {
+            id: "lesson-3", // Unique identifier for the lesson
+            title: "Type Annotations", // Title of the lesson
+            type: "lecture", // Type of lesson
+            content: "Learn how to use type annotations in TypeScript.", // Content of the lesson
+            learningOutcomes: [
+              "Understand type annotations",
+              "Learn how to use basic types in TypeScript",
+            ], // Array of learning outcomes
+            additionalResources: [
+              {
+                title: "TypeScript Basic Types", // Title of the resource
+                url: "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html", // URL for the resource
+              },
+            ], // Array of additional resources
+          },
+        ], // Array of lessons
+      },
+    ], // Array of modules
+    createdAt: new Date(), // Timestamp for course creation
+    updatedAt: new Date(), // Timestamp for course updates
   };
-
   try {
     const course = new Course(dummyData);
     const document = await course.save();
