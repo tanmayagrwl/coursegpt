@@ -67,6 +67,7 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
 ### Prerequisites
 - Node.js (v18 or later)
 - pnpm
+- Hono
 - MongoDB (local instance or cloud connection)
 - Google API credentials (for Gemini AI integration)
 
