@@ -4,11 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Book, Loader2 } from "lucide-react";
 import type { Course } from "@/types/types";
 interface CourseListProps {
-  courses: Course[];
+  courses: Course[] | null
 }
 
 export default function CourseList({ courses }: CourseListProps) {
-	if (courses.length === 0) {
+	if (courses === null) {
 		return <div className="absolute left-1/2 pt-20"><Loader2 className="animate-spin" /></div>
 	}
 	return (

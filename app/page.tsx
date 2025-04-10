@@ -34,7 +34,7 @@ export default function Dashboard() {
 	const [prompt, setPrompt] = useState("");
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [courses, setCourses] = useState<Course[]>([]);
+	const [courses, setCourses] = useState<Course[] | null>(null);
 
 	const fetchCourses = async () => {
 		try {
