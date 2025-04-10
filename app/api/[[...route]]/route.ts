@@ -18,7 +18,6 @@ app.post("/generate", async (c) => {
 	try {
 		const data = await c.req.json();
 		const prompt = data.text || "Explain how AI works";
-    console.log("Prompt:", prompt);
 		const result = await model.generateContent({
 			contents: [
 				{
@@ -124,8 +123,6 @@ app.post("/generate", async (c) => {
 			},
 		});
     const parsedResult = JSON.parse(result.response.text());
-    console.log("Parsed Result:", parsedResult);
-    // Create a new course document
     const courseData = {
       ...parsedResult,
       createdAt: new Date(),
@@ -168,7 +165,6 @@ app.post("/generateModule/:courseId", async (c) => {
 
 		const data = await c.req.json();
 		const prompt = data.text;
-		console.log("Prompt:", prompt);
 
 		const result = await model.generateContent({
 			contents: [
@@ -699,7 +695,6 @@ app.post("/deleteModule/:courseId/:moduleId", async (c) => {
 app.post("/addModule/:courseId", async (c) => {
 	const courseId = c.req.param("courseId");
 	const { title, description, lessons } = await c.req.json();
-	console.log("Lesson:", lessons);
 	if (!title) {
 		return c.json({ message: "Module title is required" }, 400);
 	}

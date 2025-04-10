@@ -72,10 +72,8 @@ export default function Dashboard() {
 			});
 			setIsGenerating(false);
 			await fetchCourses();
-			console.log("Response from AI:", response.data);
 			router.push(`/courses/${response.data.course._id}`)
 			
-			// console.log("Response from AI:", response)
 		} catch (error) {
 			console.error("Error creating course:", error);
 			toast.error(
@@ -87,7 +85,6 @@ export default function Dashboard() {
 		}
 	};
 
-	// Reset form function
 	const resetForm = () => {
 		setTitle("");
 		setPrompt("");

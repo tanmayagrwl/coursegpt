@@ -47,15 +47,15 @@ export default function AddLessonDialog({
   const [aiDetails, setAiDetails] = useState("")
   const [open, setOpen] = useState(false);
 
-  // Reset all form fields when dialog opens/closes
+
   useEffect(() => {
     if (!open) {
-      // Reset state when dialog closes
+
       resetFormState();
     }
   }, [open]);
 
-  // Function to reset all form state
+
   const resetFormState = () => {
     setLessonTitle("");
     setLessonType("lecture");
@@ -72,44 +72,34 @@ export default function AddLessonDialog({
     setIsGenerating(true);
     
     try {
-      // Call the generateLesson API endpoint with course and module IDs
       const response = await axios.post('/api/generateLesson/', { 
         title: `create a lesson on ${aiPrompt}${aiDetails ? ` keeping in mind ${aiDetails}` : ''} for ${moduleTitle} and module description ${moduleDescription}`,
       });
-  
-      console.log(response.data);
+
       
-      // Check response status
+
       if (response.status === 201 || response.status === 200) {
-        // Get the lesson data - check both possible structures
         const lessonData = response.data.lesson || response.data;
         
         if (!lessonData || (!lessonData.title && !lessonData.type)) {
           throw new Error("Invalid lesson data returned from API");
         }
         
-        // Update state with the generated lesson data
+
         setLessonTitle(lessonData.title);
         setLessonType(lessonData.type);
         setLessonContent(lessonData.content || "");
         setLearningOutcomes(lessonData.learningOutcomes || []);
         
-        // Store additional lesson data in a new state variable
-        console.log({
-          content: lessonData.content || "",
-          learningOutcomes: lessonData.learningOutcomes || []
-        });
-        
-        // Success message
-        console.log("Lesson successfully generated!");
-        
-        // Optionally call the parent component's update function
-        onLessonDeleted(); // This will refresh the lesson list
+
+
+
+        onLessonDeleted();
       }
     } catch (error) {
       console.error("Error generating lesson:", error);
       
-      // Display an appropriate error message
+
       if (axios.isAxiosError(error)) {
         console.error(
           error.response?.data?.message || 
@@ -147,7 +137,6 @@ export default function AddLessonDialog({
       toast.error(
         "Failed to add lesson. Please try again."
       );
-      // You might want to add error handling UI here
     }
   }
 

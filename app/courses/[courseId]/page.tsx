@@ -98,7 +98,7 @@ export default function CourseDetail() {
 		});
 	}, [courseId]);
 
-	// Function to handle lesson deletion refresh
+
 	const handleRefresh = () => {
 		fetchCourse(courseId).then((data) => {
 			setCourse(data);
@@ -112,7 +112,6 @@ export default function CourseDetail() {
 			const response = await fetch(`/api/togglePublish/${course.id}`, {
 				method: "POST",
 			});
-			console.log("toggleCourseStatus", response);
 			if (!response.ok) {
 				throw new Error(
 					`Failed to toggle course status: ${response.statusText}`,
@@ -142,7 +141,7 @@ export default function CourseDetail() {
 			const response = await fetch(
 				`/api/deleteModule/${course.id}/${moduleId}`,
 				{
-					method: "POST", // Changed from POST to DELETE
+					method: "POST", 
 				},
 			);
 
@@ -150,7 +149,7 @@ export default function CourseDetail() {
 				throw new Error(`Failed to delete module: ${response.statusText}`);
 			}
 
-			// Optimistically update the UI
+
 			setCourse((prevCourse) => {
 				if (!prevCourse) return null;
 				return {
@@ -161,15 +160,14 @@ export default function CourseDetail() {
 				};
 			});
 
-			// Reset active module if it was the one deleted
+
 			if (activeModule === moduleId) {
 				setActiveModule(null);
 			}
 		} catch (error) {
 			console.error("Error deleting module:", error);
-			// Optionally show error to user
+
 			alert("Failed to delete module. Please try again.");
-			// Revert by refetching
 			fetchCourse(courseId).then((data) => {
 				setCourse(data);
 			});
@@ -182,20 +180,15 @@ export default function CourseDetail() {
 
 	const handleUpdateBanner = async () => {
 		if (!course) return;
-		
-		// Create file input element
 		const fileInput = document.createElement("input");
 		fileInput.type = "file";
 		fileInput.accept = "image/*";
-		
-		// Listen for file selection
 		fileInput.onchange = async (e) => {
 			const target = e.target as HTMLInputElement;
 			const file = target.files?.[0];
 			
 			if (!file) return;
 			
-			// Convert the selected image to base64
 			const reader = new FileReader();
 			reader.onloadend = async () => {
 				const base64String = reader.result as string;
@@ -215,7 +208,6 @@ export default function CourseDetail() {
 						throw new Error(`Failed to update banner: ${response.statusText}`);
 					}
 					
-					// Refresh course data to show updated banner
 					handleRefresh();
 					toast.success("Banner updated successfully!");
 				} catch (error) {
@@ -227,7 +219,6 @@ export default function CourseDetail() {
 			reader.readAsDataURL(file);
 		};
 		
-		// Trigger file selection dialog
 		fileInput.click();
 	};
 

@@ -22,8 +22,6 @@ export default function LessonGenerator({ params }) {
     if (!topic) return
 
     setIsGenerating(true)
-
-    // Simulate AI generation
     setTimeout(() => {
       setGeneratedContent({
         title: `Understanding ${topic}`,

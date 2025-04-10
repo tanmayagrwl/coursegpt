@@ -50,7 +50,6 @@ export default function NewCourse() {
 		}
 
 		if (file.size > 5 * 1024 * 1024) {
-			// 5MB limit
 			setError("Image size should be less than 5MB");
 			return;
 		}
@@ -74,15 +73,12 @@ export default function NewCourse() {
 		setError("");
 
 		try {
-			// This is a mock implementation - replace with actual AI generation API call
-			// For demo purposes, we'll just create a placeholder image with the title
 			const canvas = document.createElement("canvas");
 			canvas.width = 800;
 			canvas.height = 450;
 			const ctx = canvas.getContext("2d");
 
 			if (ctx) {
-				// Create gradient background
 				const gradient = ctx.createLinearGradient(
 					0,
 					0,
@@ -93,14 +89,10 @@ export default function NewCourse() {
 				gradient.addColorStop(1, "#06b6d4");
 				ctx.fillStyle = gradient;
 				ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-				// Add text
 				ctx.fillStyle = "white";
 				ctx.font = "bold 48px sans-serif";
 				ctx.textAlign = "center";
 				ctx.fillText(courseTitle, canvas.width / 2, canvas.height / 2);
-
-				// Convert to base64
 				setThumbnail(canvas.toDataURL("image/jpeg"));
 			}
 		} catch (err) {
@@ -134,7 +126,7 @@ export default function NewCourse() {
 					category,
 					difficultyLevel,
 					status: "Draft",
-					thumbnail, // Include the base64 image
+					thumbnail,
 					modules: [],
 				}),
 			});

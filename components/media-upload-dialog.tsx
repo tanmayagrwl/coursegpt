@@ -27,7 +27,6 @@ export default function MediaUploadDialog({ trigger, type = "image", onUpload })
     if (selectedFile) {
       setFile(selectedFile)
 
-      // Create preview for images
       if (type === "image" && selectedFile.type.startsWith("image/")) {
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -41,7 +40,6 @@ export default function MediaUploadDialog({ trigger, type = "image", onUpload })
   const handleUpload = () => {
     setIsUploading(true)
 
-    // Simulate upload
     setTimeout(() => {
       setIsUploading(false)
       if (onUpload) {

@@ -78,28 +78,18 @@ export default function AddModuleDialog({
         },
         body: JSON.stringify({ text: `create a descriptive module around the topic ${aiPrompt} with reference to the course called ${courseTitle}` }),
       });
-      console.log("Response:", response.body);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to generate module');
       }
   
       const moduleData = await response.json();
-      console.log("Module Data >>>>>>:", moduleData.lessons);
-      // Update state with the generated module data
       setModuleTitle(moduleData.title);
       setModuleDescription(moduleData.description || '');
       setModuleLessons(moduleData.lessons || []);
-      console.log("Module lessonssss:", moduleLessons);
-      
-      // If you need to handle the lessons data as well
-      // setLessons(moduleData.lessons);
-      
-      // You might want to add the module to the course here or in a separate function
-      
+            
     } catch (error) {
       console.error('Error generating module:', error);
-      // Handle error, perhaps set an error state to display to the user
     } finally {
       setIsGenerating(false);
     }
