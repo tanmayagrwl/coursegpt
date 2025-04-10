@@ -117,15 +117,31 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
 
 
 ## Technologies
+## Technologies
 
-CourseGPT is built with:
-- Next.js
-- TypeScript
-- MongoDB
-- Hono
-- Tailwind CSS
-- Shadcn UI
-- Gemini 2.0 Flash
+CourseGPT is built with modern web technologies to provide a robust, scalable, and user-friendly experience:
+
+### Frontend
+- **Next.js** - React framework for server-side rendering and static site generation
+- **TypeScript** - For type-safe code
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn UI** - Component library for consistent design
+- **React Markdown** - Markdown rendering for lesson content
+- **React Hook Form** - Form handling with validation
+- **Sonner** - Toast notifications
+- **Embla Carousel** - For interactive content sliders
+
+### Backend & Data
+- **Hono** - Lightweight, high-performance web framework
+- **MongoDB** - NoSQL database for flexible data storage
+- **Mongoose** - MongoDB object modeling
+- **Zod** - Schema validation
+
+### AI Integration
+- **Gemini 2.0 Flash** - Google's generative AI model
+
+### Deployment
+- **Vercel** - Optimized for Next.js deployment with serverless functions
 
 ## License
 
