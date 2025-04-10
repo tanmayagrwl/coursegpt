@@ -60,11 +60,6 @@ app.post("/generate", async (c) => {
 							nullable: false,
 							description: "Difficulty level of the course",
 						},
-						thumbnail: {
-							type: Type.STRING,
-							nullable: true,
-							description: "URL of the thumbnail",
-						},
 						status: {
 							type: Type.STRING,
 							enum: ["Draft", "Published"],

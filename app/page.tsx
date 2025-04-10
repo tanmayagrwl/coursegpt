@@ -62,16 +62,18 @@ export default function Dashboard() {
 			return;
 		}
 		const finalPrompt = title
-			? `Keep the title of the course as ${title} dont add anything before or after this. It should be ${title} and nothing except that and generate the course around ${prompt}`
+			? `Keep the title of the course as ${title} dont add anything before or after this. It should be ${title} and nothing except that and generate the course around ${prompt}.`
 			: prompt;
 		try {
 			setIsGenerating(true);
-			await axios.post("/api/generate", {
+			const response = await axios.post("/api/generate", {
 				text: finalPrompt,
 			});
 			setIsGenerating(false);
 			await fetchCourses();
-
+			console.log("Response from AI:", response.data);
+			router.push(`/courses/${response.data.course._id}`)
+			
 			// console.log("Response from AI:", response)
 		} catch (error) {
 			console.error("Error creating course:", error);

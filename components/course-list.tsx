@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Book } from "lucide-react";
+import { Book, Loader2 } from "lucide-react";
 import type { Course } from "@/types/types";
 interface CourseListProps {
   courses: Course[];
 }
 
 export default function CourseList({ courses }: CourseListProps) {
-
+	if (courses.length === 0) {
+		return <div className="absolute left-1/2 pt-20"><Loader2 className="animate-spin" /></div>
+	}
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{courses.map((course: Course) => (
