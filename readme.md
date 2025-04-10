@@ -112,6 +112,10 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
     - Open your browser and navigate to `http://localhost:3000`
 
 
+## Architecture Diagram
+![Architecture Diagram](https://github.com/user-attachments/assets/4b65cf48-e571-48b7-a5ca-0eab2ba4de57)
+
+
 ## Technologies
 
 CourseGPT is built with:
