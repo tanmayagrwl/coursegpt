@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,7 +21,17 @@ import axios from "axios"
 import { set } from "mongoose"
 
 
-export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonDeleted }) {
+export default function AddLessonDialog({ 
+  trigger, 
+  courseId, 
+  moduleId, 
+  onLessonDeleted 
+}: { 
+  trigger: React.ReactNode, 
+  courseId: string, 
+  moduleId: string, 
+  onLessonDeleted: () => void 
+}) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [lessonTitle, setLessonTitle] = useState("")
   const [lessonType, setLessonType] = useState("lecture")
@@ -30,6 +40,26 @@ export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonD
   const [aiPrompt, setAiPrompt] = useState("")
   const [aiDetails, setAiDetails] = useState("")
   const [open, setOpen] = useState(false);
+
+  // Reset all form fields when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      // Reset state when dialog closes
+      resetFormState();
+    }
+  }, [open]);
+
+  // Function to reset all form state
+  const resetFormState = () => {
+    setLessonTitle("");
+    setLessonType("lecture");
+    setLessonContent("");
+    setLearningOutcomes([]);
+    setAiPrompt("");
+    setAiDetails("");
+    setIsGenerating(false);
+  };
+  
   const handleGenerateLesson = async () => {
     if (!aiPrompt) return;
     
@@ -85,20 +115,13 @@ export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonD
     } finally {
       setOpen(false);
       setIsGenerating(false);
-      setAiPrompt("");
-      setAiDetails("");
-      setOpen(false);
-      setLessonTitle("");
-      setLessonType("lecture");
-      setLessonContent("");
-      setLearningOutcomes([]);
     }
-  };  const handleAddLesson = async () => {
+  };
+  
+  const handleAddLesson = async () => {
     if (!lessonTitle) return;
 
     try {
-      // Assuming courseId and moduleId are props or coming from context/state
-      // You'll need to add these as props to the component
       const response = await axios.post(`/api/addLesson/${courseId}/${moduleId}`, {
         title: lessonTitle,
         type: lessonType,
@@ -107,9 +130,8 @@ export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonD
       });
 
       if (response.status === 200) {
-        onLessonDeleted()
-        setOpen(false)
-
+        onLessonDeleted();
+        setOpen(false);
       }
     } catch (error) {
       console.error("Error adding lesson:", error);
@@ -221,7 +243,7 @@ export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonD
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline" onClick={()=> setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button onClick={handleAddLesson} disabled={!lessonTitle}>
             Add Lesson
           </Button>
