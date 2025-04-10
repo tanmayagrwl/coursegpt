@@ -4,7 +4,6 @@ import dbConnect from "@/lib/db/connect";
 import { cors } from "hono/cors";
 import { Course } from "@/lib/db/schema";
 import { GoogleGenerativeAI, SchemaType as Type } from "@google/generative-ai";
-import { NextResponse } from "next/server";
 
 const app = new Hono().basePath("/api");
 app.use("*", cors());
@@ -254,71 +253,6 @@ app.post("/generateModule/:courseId", async (c) => {
 		return c.json((error as any)?.message || "Internal server error", 500);
 	}
 });
-
-// app.post("/generateLessons/", async (c) => {
-// 	const { title } = await c.req.json();
-
-
-// 	if (!title) {
-// 		return c.json({ message: "Title is required" }, 400);
-// 	}
-
-// 	try {
-// 		const result = await model.generateContent({
-// 			contents: [
-// 				{
-// 					parts: [
-// 						{
-// 							text: title,
-// 						},
-// 					],
-// 					role: "user",
-// 				},
-// 			],
-// 			systemInstruction:
-// 				"You are an expert course creator specializing in educational content development. For the given lesson title, generate a comprehensive set of lessons that follow a logical learning progression. Each lesson should include:\n\n1. A clear, descriptive title that accurately reflects the content\n2. An appropriate lesson type (lecture, quiz, or lab) based on the content's purpose\n3. Detailed, comprehensive content that thoroughly explains concepts, includes relevant examples, practical applications, and addresses potential questions or misconceptions\n4. Specific learning outcomes that are measurable, achievable, and aligned with the lesson content\n\nFor lectures: Include thorough explanations, examples, definitions, and contextual information.\nFor quizzes: Create meaningful assessment questions with explanations for correct answers.\nFor labs: Design practical, hands-on activities with clear step-by-step instructions.\n\nEnsure all content is educationally sound, engaging, and provides sufficient depth for learners to master the topic. The entire collection of lessons should build upon each other and cover the course subject comprehensively. Make sure that quizzes have qestions and answers relevent to the topic.\n\n\n Lesson.content is the entire so INCLUDE A FULL BOOK OF CONTENT in the field, user can learn about the full topic just by reading the content of the lesson. \n\n\n",	
-// 			generationConfig: {
-// 				responseMimeType: "application/json",
-// 				responseSchema: {
-// 					type: Type.ARRAY,
-// 					items: {
-// 						type: Type.OBJECT,
-// 						properties: {
-// 							title: {
-// 								type: Type.STRING,
-// 								nullable: false,
-// 								description: "Title of the lesson",
-// 							},
-// 							type: {
-// 								type: Type.STRING,
-// 								enum: ["lecture", "quiz", "lab"],
-// 								format: "enum",
-// 								nullable: false,
-// 								description: "Type of the lesson",
-// 							},
-// 							content: {
-// 								type: Type.STRING,
-// 								nullable: true,
-// 								description: "Content of the lesson",
-// 							},
-// 							learningOutcomes: {
-// 								type: Type.ARRAY,
-// 								items: { type: Type.STRING },
-// 								nullable: true,
-// 								description: "Learning outcomes of the lesson",
-// 							},
-// 						},
-// 						required: ["title", "type"],
-// 					},
-// 				},
-// 			},
-// 		});
-// 		return c.json(JSON.parse(result.response.text()), 200);
-		
-// 	} catch (error) {
-// 		return c.json((error as any)?.message || "Internal server error", 500);
-// 	}
-// });
 
 
 app.post("/generateLesson", async (c) => {
