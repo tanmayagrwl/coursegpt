@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db/connect";
 import { cors } from "hono/cors";
 import { Course } from "@/lib/db/schema";
 import { GoogleGenerativeAI, SchemaType as Type } from "@google/generative-ai";
+import mongoose from "mongoose";
 
 const app = new Hono().basePath("/api");
 app.use("*", cors());
@@ -30,7 +31,7 @@ app.post("/generate", async (c) => {
 				},
 			],
 			systemInstruction:
-				"You are an expert course creator. For the given title or topic, generate a comprehensive course outline including: 1) A compelling course title if not provided, 2) A detailed course description explaining what students will learn, 3) Appropriate category classification, 4) Suitable difficulty level, 5) Well-structured modules that follow a logical progression, 6) Diverse lesson types (lectures, quizzes, labs) within each module, 7) Clear learning outcomes for each lesson, and 8) Specific content suggestions for key lessons. Ensure the course is engaging, practical, and follows educational best practices.\n\n\n Lesson.content is the entire so INCLUDE A FULL BOOK OF CONTENT in the field, user can learn about the full topic just by reading the content of the lesson. \n\n\n",
+				"You are an expert course creator. For the given title or topic, generate a comprehensive small course outline including: 1) A compelling course title if not provided, 2) A detailed course description explaining what students will learn, 3) Appropriate category classification, 4) Suitable difficulty level, 5) Well-structured modules that follow a logical progression, 6) Diverse lesson types (lectures, quizzes, labs) within each module, 7) Clear learning outcomes for each lesson, and 8) Specific content suggestions for key lessons. Ensure the course is engaging, practical, and follows educational best practices.\n\n\n Lesson.content is the entire so INCLUDE A FULL BOOK OF CONTENT in the field, user can learn about the full topic just by reading the content of the lesson. \n\n\n",
 
 			generationConfig: {
 				responseMimeType: "application/json",
@@ -398,12 +399,13 @@ app.post("/generateOutcomes", async (c) => {
 	}
 });
 
-dbConnect().then(() => {
-	// get all courses
-	app.get("/getAllCourses", async (c) => {
-		const course = await Course.find();
-		return c.json(course, 200);
+app.get("/getAllCourses", async (c) => {
+	await mongoose.connect(String(process.env.MONGODB_URI), {
+		dbName: "coursegpt",
+		
 	});
+	const course = await Course.find();
+	return c.json(course, 200);
 });
 
 // get course by course ID
