@@ -17,21 +17,25 @@ import {
 } from "@/components/ui/dialog"
 import { Wand2, Loader2 } from "lucide-react"
 
-export default function AddModuleDialog({ trigger, courseId, handleRefresh}) {
+export default function AddModuleDialog({ 
+  trigger, 
+  courseId, 
+  handleRefresh
+}: { 
+  trigger: React.ReactNode; 
+  courseId: string; 
+  handleRefresh: () => void 
+}) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [moduleTitle, setModuleTitle] = useState("")
   const [moduleDescription, setModuleDescription] = useState("")
+  const [moduleLessons, setModuleLessons] = useState([])
   const [aiPrompt, setAiPrompt] = useState("")
-
+  const [open, setOpen] = useState(false)
 
   const handleAddModule = async () => {
-    
     if (!moduleTitle) return;
-    
-    try {
-      // Replace with your actual course ID and API endpoint
-
-      
+    try {      
       const response = await fetch(`/api/addModule/${courseId}`, {
         method: 'POST',
         headers: {
@@ -40,6 +44,7 @@ export default function AddModuleDialog({ trigger, courseId, handleRefresh}) {
         body: JSON.stringify({
           title: moduleTitle,
           description: moduleDescription,
+          lessons: moduleLessons,
         }),
       });
       
@@ -49,35 +54,57 @@ export default function AddModuleDialog({ trigger, courseId, handleRefresh}) {
       }
       
       handleRefresh()
-      
-      // Reset form
       setModuleTitle("");
       setModuleDescription("");
       setAiPrompt("");
       
     } catch (error) {
       console.error("Error adding module:", error);
-      // You might want to add error handling UI here
     }
   };
 
-  const handleGenerateModule = () => {
-    if (!aiPrompt) return
-
-    setIsGenerating(true)
-
-    // Simulate AI generation
-    setTimeout(() => {
-      setModuleTitle("Understanding Core Concepts")
-      setModuleDescription(
-        "This module covers the fundamental concepts and principles that form the foundation of the subject.",
-      )
-      setIsGenerating(false)
-    }, 1500)
-  }
+  const handleGenerateModule = async () => {
+    if (!aiPrompt) return;
+  
+    setIsGenerating(true);
+  
+    try {
+      const response = await fetch(`/api/generateModule/${courseId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: aiPrompt }),
+      });
+      console.log("Response:", response.body);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate module');
+      }
+  
+      const moduleData = await response.json();
+      console.log("Module Data >>>>>>:", moduleData.lessons);
+      // Update state with the generated module data
+      setModuleTitle(moduleData.title);
+      setModuleDescription(moduleData.description || '');
+      setModuleLessons(moduleData.lessons || []);
+      console.log("Module lessonssss:", moduleLessons);
+      
+      // If you need to handle the lessons data as well
+      // setLessons(moduleData.lessons);
+      
+      // You might want to add the module to the course here or in a separate function
+      
+    } catch (error) {
+      console.error('Error generating module:', error);
+      // Handle error, perhaps set an error state to display to the user
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
@@ -150,7 +177,7 @@ export default function AddModuleDialog({ trigger, courseId, handleRefresh}) {
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline">Cancel</Button>
+          <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
           <Button onClick={handleAddModule} disabled={!moduleTitle}>
             Add Module
           </Button>

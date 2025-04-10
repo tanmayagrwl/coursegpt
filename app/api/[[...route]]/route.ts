@@ -160,6 +160,106 @@ app.post("/generate", async (c) => {
 	}
 });
 
+
+app.post("/generateModule/:courseId", async (c) => {
+	try {
+		const courseId = c.req.param("courseId");
+
+		// Find the course first
+		const course = await Course.findById(courseId);
+		if (!course) {
+			return c.json({ message: "Course not found" }, 404);
+		}
+
+		const data = await c.req.json();
+		const prompt = data.text;
+		console.log("Prompt:", prompt);
+
+		const result = await model.generateContent({
+			contents: [
+				{
+					parts: [
+						{
+							text: prompt,
+						},
+					],
+					role: "user",
+				},
+			],
+			systemInstruction: `You are an expert module creator. For the given topic, generate a comprehensive course module including:
+				1) A compelling module title if not provided
+				2) A detailed module description explaining what students will learn
+				3) Well-structured lessons that follow a logical progression
+				4) Diverse lesson types (lectures, quizzes, labs)
+				5) Clear learning outcomes for each lesson
+				6) Specific content for each lesson (include full educational content)
+				
+				Ensure the module is engaging, practical, and follows educational best practices. Each lesson's content should be comprehensive enough that a student could learn the material just by reading it.`,
+
+			generationConfig: {
+				responseMimeType: "application/json",
+				responseSchema: {
+					type: Type.OBJECT,
+					properties: {
+						title: {
+							type: Type.STRING,
+							nullable: false,
+							description: "Title of the module",
+						},
+						description: {
+							type: Type.STRING,
+							nullable: true,
+							description: "Description of the module",
+						},
+						lessons: {
+							type: Type.ARRAY,
+							items: {
+								type: Type.OBJECT,
+								properties: {
+									title: {
+										type: Type.STRING,
+										nullable: false,
+										description: "Title of the lesson",
+									},
+									type: {
+										type: Type.STRING,
+										enum: ["lecture", "quiz", "lab"],
+										format: "enum",
+										nullable: false,
+										description: "Type of the lesson",
+									},
+									content: {
+										type: Type.STRING,
+										nullable: true,
+										description: "Comprehensive content of the lesson",
+									},
+									learningOutcomes: {
+										type: Type.ARRAY,
+										items: { type: Type.STRING },
+										nullable: true,
+										description: "Learning outcomes of the lesson",
+									},
+								},
+								required: ["title", "type"],
+							},
+						},
+					},
+					required: ["title", "lessons"],
+				},
+			},
+		});
+
+		const responseText = await result.response.text();
+		const parsedResult = JSON.parse(responseText);
+
+		return c.json(parsedResult);
+
+	} catch (error) {
+		console.error("Error generating module:", error);
+		return c.json((error as any)?.message || "Internal server error", 500);
+	}
+});
+
 // app.post("/generateLessons/", async (c) => {
 // 	const { title } = await c.req.json();
 
@@ -631,8 +731,8 @@ app.post("/deleteModule/:courseId/:moduleId", async (c) => {
 // add a module to a course
 app.post("/addModule/:courseId", async (c) => {
 	const courseId = c.req.param("courseId");
-	const { title, description } = await c.req.json();
-
+	const { title, description, lessons } = await c.req.json();
+	console.log("Lesson:", lessons);
 	if (!title) {
 		return c.json({ message: "Module title is required" }, 400);
 	}
@@ -647,7 +747,7 @@ app.post("/addModule/:courseId", async (c) => {
 			id: `module-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 			title,
 			description: description || "",
-			lessons: [],
+			lessons: lessons,
 		};
 
 		course.modules.push(moduleData);
