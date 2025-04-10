@@ -338,7 +338,7 @@ app.post("/generateContent", async (c) => {
 				},
 			],
 			systemInstruction:
-				"You are an expert course creator. For the given lesson title, generate a comprehensive content that thoroughly explains concepts, includes relevant examples, practical applications, and addresses potential questions or misconceptions.",
+				"You are an expert course creator. For the given lesson title, generate a comprehensive content that thoroughly explains concepts, includes relevant examples, practical applications, and addresses potential questions or misconceptions. \n\nEnsure the content is educationally sound, engaging, and provides sufficient depth for learners to master the topic. The entire content should build upon each other and cover the course subject comprehensively. Make sure that quizzes have questions and answers relevant to the topic.\n\n\n Lesson.content is the entire so INCLUDE A FULL BOOK OF CONTENT in the field, user can learn about the full topic just by reading the content of the lesson. \n\n\n",
 			generationConfig: {
 				responseMimeType: "application/json",
 				responseSchema: {

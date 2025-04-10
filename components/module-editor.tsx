@@ -115,7 +115,7 @@ export default function ModuleEditor({
 				throw new Error("A valid lesson title is required");
 			}
 
-			const response = await axios.post("/api/generateContent", { title });
+			const response = await axios.post("/api/generateContent", { title : `The title is ${title} and the older content which you need to enhance to make the user understand it better is ${selectedLesson?.content}. Check if you think the content is even relavent and if not give the relevant content else give the enhanced content` });
 
 			if (response.status !== 200) {
 				throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -377,8 +377,8 @@ export default function ModuleEditor({
 									/>
 
 									{showPreview && (
-										<div className="w-1/2 h-full max-h-[400px] overflow-y-auto p-4 border rounded-md bg-gray-50">
-											<ReactMarkdown>
+										<div className="w-1/2 h-full max-h-[400px] overflow-y-auto p-4 border rounded-md bg-gray-50 prose">
+											<ReactMarkdown >
 												{selectedLesson.content || "*Nothing to preview*"}
 											</ReactMarkdown>
 										</div>
