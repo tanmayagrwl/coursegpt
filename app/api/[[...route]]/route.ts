@@ -447,6 +447,42 @@ app.post("/togglePublish/:id", async (c) => {
 	}
 });
 
+//update course details
+app.post("/updateCourse/:id", async (c) => {
+	const courseId = c.req.param("id");
+	const { title, description, category, difficultyLevel, thumbnail } =
+		await c.req.json();
+
+	try {
+		const course = await Course.findById(courseId);
+		if (!course) {
+			return c.json({ message: "Course not found" }, 404);
+		}
+
+		course.title = title || course.title;
+		course.description = description || course.description;
+		course.category = category || course.category;
+		course.difficultyLevel =
+			difficultyLevel || course.difficultyLevel;
+		course.thumbnail = thumbnail || course.thumbnail;
+
+		await course.save();
+
+		return c.json(
+			{
+				message: "Course updated successfully",
+				course,
+			},
+			200,
+		);
+	} catch (error) {
+		console.error("Error updating course:", error);
+		return c.json((error as any)?.message || "Internal server error", 500);
+	}
+});
+
+
+
 // delete lesson
 app.post("/deleteLesson/:courseId/:moduleId/:lessonId", async (c) => {
 	const courseId = c.req.param("courseId");

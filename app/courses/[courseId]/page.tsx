@@ -26,6 +26,7 @@ import {
 import AddModuleDialog from "@/components/add-module-dialog";
 import type { Course, Module } from "@/types/types";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 interface ApiLesson {
 	_id: string;
@@ -179,6 +180,57 @@ export default function CourseDetail() {
 		setActiveModule(moduleId === activeModule ? null : moduleId);
 	};
 
+	const handleUpdateBanner = async () => {
+		if (!course) return;
+		
+		// Create file input element
+		const fileInput = document.createElement("input");
+		fileInput.type = "file";
+		fileInput.accept = "image/*";
+		
+		// Listen for file selection
+		fileInput.onchange = async (e) => {
+			const target = e.target as HTMLInputElement;
+			const file = target.files?.[0];
+			
+			if (!file) return;
+			
+			// Convert the selected image to base64
+			const reader = new FileReader();
+			reader.onloadend = async () => {
+				const base64String = reader.result as string;
+				
+				try {
+					const response = await fetch(`/api/updateCourse/${courseId}`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							thumbnail: base64String
+						}),
+					});
+					
+					if (!response.ok) {
+						throw new Error(`Failed to update banner: ${response.statusText}`);
+					}
+					
+					// Refresh course data to show updated banner
+					handleRefresh();
+					toast.success("Banner updated successfully!");
+				} catch (error) {
+					console.error("Error updating banner:", error);
+					alert("Failed to update banner. Please try again.");
+				}
+			};
+			
+			reader.readAsDataURL(file);
+		};
+		
+		// Trigger file selection dialog
+		fileInput.click();
+	};
+
 	if (!course) {
 		return <div className="absolute top-1/2 left-1/2">Loading...</div>;
 	}
@@ -192,7 +244,9 @@ export default function CourseDetail() {
 							<ArrowLeft className="h-4 w-4" />
 							<span>Back to Dashboard</span>
 						</Link>
+						
 					</div>
+					<Button onClick={handleUpdateBanner}>Update Banner</Button>
 				</div>
 			</header>
 
