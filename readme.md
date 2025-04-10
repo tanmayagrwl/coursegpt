@@ -41,7 +41,7 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
 ### Generate a Complete Course
 1. Click "Create New Course"
 2. Enter a course title
-3. (Optional) Add an AI generation prompt
+3. Add an AI generation prompt
 4. Click "Continue" to generate a full course structure
 
 ### Generate a Module
@@ -62,10 +62,15 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
 2. In the content editor, click "Enhance with AI"
 3. The AI will improve and expand your existing content
 
+### Enhance Outcones
+1. Select a lesson
+2. In the content editor, go to outcomes tab and click on "Generate Outcomes"
+3. The AI will improve and expand your existing content
+
 ## Installation & Setup
 
 ### Prerequisites
-- Node.js (v18 or later)
+- Node.js
 - pnpm
 - Hono
 - MongoDB (local instance or cloud connection)
@@ -120,8 +125,7 @@ CourseGPT is built with:
 
 ## License
 
-[License information would be here]
-
+MIT License
 
 
 ---
