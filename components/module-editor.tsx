@@ -312,11 +312,6 @@ export default function ModuleEditor({
 									</Button>
 								}
 							/>
-
-							<Button size="sm" variant="outline">
-								<Wand2 className="h-4 w-4 mr-2" />
-								Generate All
-							</Button>
 						</div>
 					</div>
 

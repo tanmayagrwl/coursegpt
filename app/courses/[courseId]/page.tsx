@@ -267,14 +267,6 @@ export default function CourseDetail() {
 																</Button>
 															</DropdownMenuTrigger>
 															<DropdownMenuContent align="end">
-																<DropdownMenuItem>
-																	<MoveUp className="h-4 w-4 mr-2" />
-																	Move Up
-																</DropdownMenuItem>
-																<DropdownMenuItem>
-																	<MoveDown className="h-4 w-4 mr-2" />
-																	Move Down
-																</DropdownMenuItem>
 																<DropdownMenuItem
 																	className="text-red-600"
 																	onClick={() => handleModuleDelete(module.id)}
