@@ -117,7 +117,6 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
 
 
 ## Technologies
-## Technologies
 
 CourseGPT is built with modern web technologies to provide a robust, scalable, and user-friendly experience:
 
