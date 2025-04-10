@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import type { Course } from "@/types/types";
+import { toast } from "sonner";
 export default function Dashboard() {
 	const router = useRouter();
 	const [title, setTitle] = useState("");
@@ -77,6 +78,9 @@ export default function Dashboard() {
 			// console.log("Response from AI:", response)
 		} catch (error) {
 			console.error("Error creating course:", error);
+			toast.error(
+				"Error creating course. Please try again later."
+			);
 		} finally {
 			setIsGenerating(false);
 			setDialogOpen(false);

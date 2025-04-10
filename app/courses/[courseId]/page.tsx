@@ -276,6 +276,7 @@ export default function CourseDetail() {
 										<div className="flex justify-between items-center mb-4">
 											<h3 className="font-medium">Course Modules</h3>
 											<AddModuleDialog
+												courseTitle={course.title}
 												courseId={course.id}
 												handleRefresh={handleRefresh}
 												trigger={
@@ -359,6 +360,7 @@ export default function CourseDetail() {
 												start building your course content
 											</p>
 											<AddModuleDialog
+											courseTitle={course.title}
 												courseId={course.id}
 												handleRefresh={handleRefresh}
 												trigger={

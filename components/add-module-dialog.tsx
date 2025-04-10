@@ -20,11 +20,13 @@ import { Wand2, Loader2 } from "lucide-react"
 export default function AddModuleDialog({ 
   trigger, 
   courseId, 
-  handleRefresh
+  handleRefresh,
+  courseTitle,
 }: { 
   trigger: React.ReactNode; 
   courseId: string; 
   handleRefresh: () => void 
+  courseTitle: string;
 }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [moduleTitle, setModuleTitle] = useState("")
@@ -74,7 +76,7 @@ export default function AddModuleDialog({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: aiPrompt }),
+        body: JSON.stringify({ text: `create a descriptive module around the topic ${aiPrompt} with reference to the course called ${courseTitle}` }),
       });
       console.log("Response:", response.body);
       if (!response.ok) {

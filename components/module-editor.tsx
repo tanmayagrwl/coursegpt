@@ -15,17 +15,13 @@ import {
 	GripVertical,
 	Edit,
 	Trash2,
-	ImageIcon,
-	Video,
-	FileIcon,
 	Loader2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AddLessonDialog from "@/components/add-lesson-dialog";
-import MediaUploadDialog from "@/components/media-upload-dialog";
-import MediaBadge from "@/components/media-badge";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
 
 interface Lesson {
 	id: string;
@@ -65,7 +61,6 @@ export default function ModuleEditor({
 		[],
 	);
 	const [isGeneratingOutcomes, setIsGeneratingOutcomes] = useState(false);
-	const [mediaBadges, setMediaBadges] = useState([]);
 	const [showPreview, setShowPreview] = useState(true);
 
 	const handleGenerateOutcomes = async (
@@ -80,11 +75,16 @@ export default function ModuleEditor({
 			const response = await axios.post("/api/generateOutcomes", { title });
 
 			if (response.status !== 200) {
+				toast.error(`${response.status} ${response.statusText}`)
 				throw new Error(`API error: ${response.status} ${response.statusText}`);
 			}
 
 			if (!response.data) {
+				toast.error(
+					"API returned unexpected data format",
+				)
 				throw new Error("API returned unexpected data format");
+				
 			}
 
 			if (selectedLesson) {
@@ -96,6 +96,9 @@ export default function ModuleEditor({
 			return response.data;
 		} catch (error) {
 			console.error("Error generating outcomes:", error);
+			toast.error(
+				"Error generating outcomes. Please try again.",
+			)
 			throw error;
 		} finally {
 			setIsGeneratingOutcomes(false);
@@ -252,6 +255,8 @@ export default function ModuleEditor({
 						<h4 className="font-medium">Lessons</h4>
 						<div className="flex gap-2">
 							<AddLessonDialog
+								moduleTitle={module.title}
+								moduleDescription={module.description}
 								courseId={courseId}
 								moduleId={module.id}
 								onLessonDeleted={onLessonDeleted}

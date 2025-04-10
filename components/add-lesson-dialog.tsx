@@ -19,18 +19,24 @@ import { FileText, CheckSquare, Beaker, Wand2, Loader2 } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import axios from "axios"
 import { set } from "mongoose"
+import { toast } from "sonner"
 
 
 export default function AddLessonDialog({ 
   trigger, 
   courseId, 
   moduleId, 
-  onLessonDeleted 
+  onLessonDeleted,
+  moduleTitle,
+  moduleDescription
 }: { 
   trigger: React.ReactNode, 
   courseId: string, 
   moduleId: string, 
   onLessonDeleted: () => void 
+  moduleTitle: string,
+  moduleDescription: string
+
 }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [lessonTitle, setLessonTitle] = useState("")
@@ -68,7 +74,7 @@ export default function AddLessonDialog({
     try {
       // Call the generateLesson API endpoint with course and module IDs
       const response = await axios.post('/api/generateLesson/', { 
-        title: `create a lesson on ${aiPrompt}${aiDetails ? ` keeping in mind ${aiDetails}` : ''}`,
+        title: `create a lesson on ${aiPrompt}${aiDetails ? ` keeping in mind ${aiDetails}` : ''} for ${moduleTitle} and module description ${moduleDescription}`,
       });
   
       console.log(response.data);
@@ -109,11 +115,14 @@ export default function AddLessonDialog({
           error.response?.data?.message || 
           "Failed to generate lesson. Please try again."
         );
+        toast.error(
+          error.response?.data?.message ||
+          "Failed to generate lesson. Please try again."
+        );
       } else {
         console.error("An unexpected error occurred. Please try again.");
       }
     } finally {
-      setOpen(false);
       setIsGenerating(false);
     }
   };
@@ -135,6 +144,9 @@ export default function AddLessonDialog({
       }
     } catch (error) {
       console.error("Error adding lesson:", error);
+      toast.error(
+        "Failed to add lesson. Please try again."
+      );
       // You might want to add error handling UI here
     }
   }
