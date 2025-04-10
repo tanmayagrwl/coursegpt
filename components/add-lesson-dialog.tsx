@@ -20,28 +20,80 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import axios from "axios"
 import { set } from "mongoose"
 
+
 export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonDeleted }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [lessonTitle, setLessonTitle] = useState("")
   const [lessonType, setLessonType] = useState("lecture")
+  const [lessonContent, setLessonContent] = useState("")
+  const [learningOutcomes, setLearningOutcomes] = useState([])
   const [aiPrompt, setAiPrompt] = useState("")
   const [aiDetails, setAiDetails] = useState("")
   const [open, setOpen] = useState(false);
-
-  const handleGenerateLesson = () => {
-    if (!aiPrompt) return
-
-    setIsGenerating(true)
-
-    // Simulate AI generation
-    setTimeout(() => {
-      setLessonTitle(`Introduction to ${aiPrompt}`)
-      setLessonType("lecture")
-      setIsGenerating(false)
-    }, 1500)
-  }
-
-  const handleAddLesson = async () => {
+  const handleGenerateLesson = async () => {
+    if (!aiPrompt) return;
+    
+    setIsGenerating(true);
+    
+    try {
+      // Call the generateLesson API endpoint with course and module IDs
+      const response = await axios.post('/api/generateLesson/', { 
+        title: `create a lesson on ${aiPrompt}${aiDetails ? ` keeping in mind ${aiDetails}` : ''}`,
+      });
+  
+      console.log(response.data);
+      
+      // Check response status
+      if (response.status === 201 || response.status === 200) {
+        // Get the lesson data - check both possible structures
+        const lessonData = response.data.lesson || response.data;
+        
+        if (!lessonData || (!lessonData.title && !lessonData.type)) {
+          throw new Error("Invalid lesson data returned from API");
+        }
+        
+        // Update state with the generated lesson data
+        setLessonTitle(lessonData.title);
+        setLessonType(lessonData.type);
+        setLessonContent(lessonData.content || "");
+        setLearningOutcomes(lessonData.learningOutcomes || []);
+        
+        // Store additional lesson data in a new state variable
+        console.log({
+          content: lessonData.content || "",
+          learningOutcomes: lessonData.learningOutcomes || []
+        });
+        
+        // Success message
+        console.log("Lesson successfully generated!");
+        
+        // Optionally call the parent component's update function
+        onLessonDeleted(); // This will refresh the lesson list
+      }
+    } catch (error) {
+      console.error("Error generating lesson:", error);
+      
+      // Display an appropriate error message
+      if (axios.isAxiosError(error)) {
+        console.error(
+          error.response?.data?.message || 
+          "Failed to generate lesson. Please try again."
+        );
+      } else {
+        console.error("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setOpen(false);
+      setIsGenerating(false);
+      setAiPrompt("");
+      setAiDetails("");
+      setOpen(false);
+      setLessonTitle("");
+      setLessonType("lecture");
+      setLessonContent("");
+      setLearningOutcomes([]);
+    }
+  };  const handleAddLesson = async () => {
     if (!lessonTitle) return;
 
     try {
@@ -49,7 +101,9 @@ export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonD
       // You'll need to add these as props to the component
       const response = await axios.post(`/api/addLesson/${courseId}/${moduleId}`, {
         title: lessonTitle,
-        type: lessonType
+        type: lessonType,
+        content: lessonContent,
+        learningOutcomes: learningOutcomes,
       });
 
       if (response.status === 200) {
@@ -167,7 +221,7 @@ export default function AddLessonDialog({ trigger, courseId, moduleId, onLessonD
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline">Cancel</Button>
+          <Button variant="outline" onClick={()=> setOpen(false)}>Cancel</Button>
           <Button onClick={handleAddLesson} disabled={!lessonTitle}>
             Add Lesson
           </Button>
