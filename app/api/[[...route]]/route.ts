@@ -31,7 +31,7 @@ app.post("/generate", async (c) => {
 				},
 			],
 			systemInstruction:
-				"You are an expert course creator. For the given title or topic, generate a comprehensive small course outline including: 1) A compelling course title if not provided, 2) A detailed course description explaining what students will learn, 3) Appropriate category classification, 4) Suitable difficulty level, 5) Well-structured modules that follow a logical progression, 6) Diverse lesson types (lectures, quizzes, labs) within each module, 7) Clear learning outcomes for each lesson, and 8) Specific content suggestions for key lessons. Ensure the course is engaging, practical, and follows educational best practices.\n\n\n Lesson.content is the entire so INCLUDE A FULL BOOK OF CONTENT in the field, user can learn about the full topic just by reading the content of the lesson. \n\n\n",
+				"You are an expert course creator. For the given title or topic, generate a very small brief course outline including: 1) A compelling course title if not provided, 2) A detailed course description explaining what students will learn, 3) Appropriate category classification, 4) Suitable difficulty level, 5) Well-structured modules that follow a logical progression, 6) Diverse lesson types (lectures, quizzes, labs) within each module, 7) Clear learning outcomes for each lesson, and 8) Specific content suggestions for key lessons. Ensure the course is engaging, practical, and follows educational best practices.\n\n\n Lesson. \n\n\n",
 
 			generationConfig: {
 				responseMimeType: "application/json",
