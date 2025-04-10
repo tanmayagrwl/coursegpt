@@ -25,6 +25,7 @@ import AddLessonDialog from "@/components/add-lesson-dialog";
 import MediaUploadDialog from "@/components/media-upload-dialog";
 import MediaBadge from "@/components/media-badge";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 interface Lesson {
 	id: string;
@@ -57,46 +58,34 @@ export default function ModuleEditor({
 	courseId,
 	onLessonDeleted,
 }: ModuleEditorProps) {
-	console.log("ModuleEditor props:", module, courseId);
-	const [isGeneratingLesson, setIsGeneratingLesson] = useState(false);
 	const [isGeneratingContent, setIsGeneratingContent] = useState(false);
 	const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 	const [timedContent, setTimedContent] = useState("");
 	const [timedLearningOutcomes, setTimedLearningOutcomes] = useState<string[]>(
 		[],
 	);
-	const [isgeneratingOutcomes, setIsGeneratingOutcomes] = useState(false);
-	console.log("Module", module);
-	console.log("Selected lesson:", selectedLesson);
+	const [isGeneratingOutcomes, setIsGeneratingOutcomes] = useState(false);
 	const [mediaBadges, setMediaBadges] = useState([]);
-	console.log("Set selected lesson:", setSelectedLesson);
+	const [showPreview, setShowPreview] = useState(true);
 
 	const handleGenerateOutcomes = async (
 		title: string,
 	): Promise<{ outcomes: string[] }> => {
 		setTimedLearningOutcomes(selectedLesson?.learningOutcomes || []);
-		console.log("Timed learning outcomes:", timedLearningOutcomes);
-		console.log("Generating outcomes for lesson:", title);
 		setIsGeneratingOutcomes(true);
 		try {
-			// Input validation
 			if (!title || typeof title !== "string" || title.trim() === "") {
 				throw new Error("A valid lesson title is required");
 			}
-			console.log("Making API call to generate outcomes...", title);
 			const response = await axios.post("/api/generateOutcomes", { title });
 
-			// Check for successful response
 			if (response.status !== 200) {
 				throw new Error(`API error: ${response.status} ${response.statusText}`);
 			}
 
-			// Check if the response has the expected format
 			if (!response.data) {
 				throw new Error("API returned unexpected data format");
 			}
-
-			console.log("Generated outcomes:", response.data);
 
 			if (selectedLesson) {
 				setSelectedLesson({
@@ -107,16 +96,7 @@ export default function ModuleEditor({
 			return response.data;
 		} catch (error) {
 			console.error("Error generating outcomes:", error);
-			if (axios.isAxiosError(error)) {
-				if (error.response) {
-					throw new Error(
-						`Failed to generate outcomes: ${error.response.data?.message || error.message}`,
-					);
-				}
-			}
-			throw new Error(
-				`Failed to generate outcomes: ${(error as Error).message}`,
-			);
+			throw error;
 		} finally {
 			setIsGeneratingOutcomes(false);
 		}
@@ -126,28 +106,21 @@ export default function ModuleEditor({
 		title: string,
 	): Promise<{ content: string }> => {
 		setTimedContent(selectedLesson?.content || "");
-		console.log("Generating content for lesson:", title);
 		setIsGeneratingContent(true);
 		try {
-			// Input validation
 			if (!title || typeof title !== "string" || title.trim() === "") {
 				throw new Error("A valid lesson title is required");
 			}
 
-			// Make the API call
 			const response = await axios.post("/api/generateContent", { title });
 
-			// Check for successful response
 			if (response.status !== 200) {
 				throw new Error(`API error: ${response.status} ${response.statusText}`);
 			}
 
-			// Check if the response has the expected format
-			if (!response.data || !response.data.content) {
+			if (!response.data?.content) {
 				throw new Error("API returned unexpected data format");
 			}
-
-			console.log("Generated content:", response.data.content);
 
 			if (selectedLesson) {
 				setSelectedLesson({
@@ -157,21 +130,8 @@ export default function ModuleEditor({
 			}
 			return response.data;
 		} catch (error) {
-			// Log the error for debugging
 			console.error("Error generating content:", error);
-
-			// Re-throw with a user-friendly message
-			if (axios.isAxiosError(error)) {
-				if (error.response) {
-					throw new Error(
-						`Failed to generate content: ${error.response.data?.message || error.message}`,
-					);
-				}
-			}
-			// For other types of errors
-			throw new Error(
-				`Failed to generate content: ${(error as Error).message}`,
-			);
+			throw error;
 		} finally {
 			setIsGeneratingContent(false);
 		}
@@ -187,16 +147,12 @@ export default function ModuleEditor({
 	};
 
 	const handleDeleteLesson = async (lessonId: string) => {
-		if (!courseId || !module.id || !lessonId) {
-			console.error("Missing required parameters for deleting a lesson.");
-			return;
-		}
+		if (!courseId || !module.id || !lessonId) return;
 
 		try {
-			const response = await axios.post(
-				`http://localhost:3000/api/deleteLesson/${courseId}/${module.id}/${lessonId}`,
+			await axios.post(
+				`/api/deleteLesson/${courseId}/${module.id}/${lessonId}`,
 			);
-			console.log("Lesson deleted successfully:", response.data);
 			onLessonDeleted();
 			setSelectedLesson(null);
 		} catch (error) {
@@ -205,22 +161,18 @@ export default function ModuleEditor({
 	};
 
 	const handleUpdateLesson = async (updatedLesson: Lesson) => {
-		if (!courseId || !module.id || !selectedLesson?.id) {
-			console.error("Missing required parameters for updating a lesson.");
-			return;
-		}
+		if (!courseId || !module.id || !selectedLesson?.id) return;
 
 		try {
 			const response = await axios.post(
-				`http://localhost:3000/api/updateLesson/${courseId}/${module.id}/${selectedLesson.id}`,
+				`/api/updateLesson/${courseId}/${module.id}/${selectedLesson.id}`,
 				updatedLesson,
 			);
-			console.log("Lesson updated successfully:", response.data);
-			onLessonDeleted(); // Refresh the course data
+			onLessonDeleted();
 			setSelectedLesson(
 				response.data.course.modules
-					.find((m) => m.id === module.id)
-					?.lessons.find((l) => l.id === selectedLesson.id) || null,
+					.find((m: Module) => m.id === module.id)
+					?.lessons.find((l: Lesson) => l.id === selectedLesson.id) || null,
 			);
 		} catch (error) {
 			console.error("Error updating lesson:", error);
@@ -229,27 +181,25 @@ export default function ModuleEditor({
 
 	const handleSaveLessonContent = () => {
 		if (selectedLesson) {
-			const updatedLesson = {
+			handleUpdateLesson({
 				...selectedLesson,
-				content: selectedLesson.content, // Update content
-			};
-			handleUpdateLesson(updatedLesson);
+				content: selectedLesson.content,
+			});
 			setTimedContent("");
 		}
 	};
 
 	const handleSaveLearningOutcomes = (updatedOutcomes: string[]) => {
 		if (selectedLesson) {
-			const updatedLesson = {
+			handleUpdateLesson({
 				...selectedLesson,
-				learningOutcomes: updatedOutcomes, // Update learning outcomes
-			};
-			handleUpdateLesson(updatedLesson);
+				learningOutcomes: updatedOutcomes,
+			});
 			setTimedLearningOutcomes([]);
 		}
 	};
 
-	const getLessonIcon = (type) => {
+	const getLessonIcon = (type: string) => {
 		switch (type) {
 			case "lecture":
 				return <FileText className="h-4 w-4 text-blue-500" />;
@@ -262,7 +212,7 @@ export default function ModuleEditor({
 		}
 	};
 
-	const getLessonTypeBadge = (type) => {
+	const getLessonTypeBadge = (type: string) => {
 		switch (type) {
 			case "lecture":
 				return (
@@ -317,6 +267,7 @@ export default function ModuleEditor({
 
 					<div className="space-y-2">
 						{module.lessons.map((lesson) => (
+							// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 							<div
 								key={lesson.id}
 								className={`border rounded-md p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 ${
@@ -348,7 +299,10 @@ export default function ModuleEditor({
 										variant="ghost"
 										size="sm"
 										className="h-8 w-8 p-0 text-red-500"
-										onClick={() => handleDeleteLesson(lesson.id)}
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeleteLesson(lesson.id);
+										}}
 									>
 										<Trash2 className="h-4 w-4" />
 									</Button>
@@ -375,113 +329,56 @@ export default function ModuleEditor({
 							<TabsContent value="content" className="space-y-4">
 								<div className="flex justify-between items-center mb-2">
 									<Label>Lesson Content</Label>
-									<Button
-										variant="outline"
-										disabled={isGeneratingContent}
-										size="sm"
-										onClick={() => handleGenerateContent(selectedLesson.title)}
-									>
-										<Wand2 className="h-3 w-3 mr-2" />
-										{isGeneratingContent ? (
-											<Loader2 className="animate-spin" />
-										) : (
-											"Enhance with AI"
-										)}
-									</Button>
-								</div>
-								<div className="flex gap-2 mb-2">
-									<MediaUploadDialog
-										type="image"
-										trigger={
-											<Button
-												variant="outline"
-												size="sm"
-												className="flex items-center gap-1"
-											>
-												<ImageIcon className="h-4 w-4" />
-												<span>Add Image</span>
-											</Button>
-										}
-										onUpload={(media) => {
-											console.log("Image added:", media);
-											setMediaBadges([...mediaBadges, media]);
-											// Here you would typically insert the image into the editor
-										}}
-									/>
-									<MediaUploadDialog
-										type="video"
-										trigger={
-											<Button
-												variant="outline"
-												size="sm"
-												className="flex items-center gap-1"
-											>
-												<Video className="h-4 w-4" />
-												<span>Add Video</span>
-											</Button>
-										}
-										onUpload={(media) => {
-											console.log("Video added:", media);
-											setMediaBadges([...mediaBadges, media]);
-											// Here you would typically insert the video into the editor
-										}}
-									/>
-									<MediaUploadDialog
-										type="file"
-										trigger={
-											<Button
-												variant="outline"
-												size="sm"
-												className="flex items-center gap-1"
-											>
-												<FileIcon className="h-4 w-4" />
-												<span>Add File</span>
-											</Button>
-										}
-										onUpload={(media) => {
-											console.log("File added:", media);
-											setMediaBadges([...mediaBadges, media]);
-											// Here you would typically insert a link to the file into the editor
-										}}
-									/>
-								</div>
-
-								{mediaBadges.length > 0 && (
-									<div className="flex flex-wrap gap-2 mb-3 p-2 border rounded-md bg-gray-50">
-										<div className="text-xs font-medium text-gray-500 mr-2 flex items-center">
-											Inserted Media:
-										</div>
-										{mediaBadges.map((media) => (
-											<MediaBadge
-												key={media.id}
-												media={media}
-												onRemove={(id) => {
-													setMediaBadges(
-														mediaBadges.filter((m) => m.id !== id),
-													);
-												}}
-												onInsert={(media) => {
-													// Here you would typically focus the editor and insert the media
-													console.log("Insert media:", media.insertText);
-												}}
-											/>
-										))}
+									<div className="flex gap-2">
+										<Button
+											variant={showPreview ? "default" : "outline"}
+											size="sm"
+											onClick={() => setShowPreview(!showPreview)}
+										>
+											{showPreview ? "Hide Preview" : "Show Preview"}
+										</Button>
+										<Button
+											variant="outline"
+											disabled={isGeneratingContent}
+											size="sm"
+											onClick={() =>
+												handleGenerateContent(selectedLesson.title)
+											}
+										>
+											<Wand2 className="h-3 w-3 mr-2" />
+											{isGeneratingContent ? (
+												<Loader2 className="animate-spin" />
+											) : (
+												"Enhance with AI"
+											)}
+										</Button>
 									</div>
-								)}
+								</div>
 
-								<Textarea
-									placeholder="Enter lesson content here..."
-									rows={12}
-									disabled={isGeneratingContent}
-									className="font-mono text-sm"
-									value={selectedLesson.content}
-									onChange={(e) =>
-										setSelectedLesson({
-											...selectedLesson,
-											content: e.target.value,
-										})
-									}
-								/>
+								<div className="flex flex-col lg:flex-row  gap-4 mmin-h-[400px]">
+									<Textarea
+										placeholder="Enter markdown content here..."
+										value={selectedLesson.content}
+										onChange={(e) =>
+											setSelectedLesson({
+												...selectedLesson,
+												content: e.target.value,
+											})
+										}
+										className={`font-mono text-sm h-full min-h-[400px] resize-none ${
+											showPreview ? "w-1/2" : "w-full"
+										}`}
+										disabled={isGeneratingContent}
+									/>
+
+									{showPreview && (
+										<div className="w-1/2 h-full max-h-[400px] overflow-y-auto p-4 border rounded-md bg-gray-50">
+											<ReactMarkdown>
+												{selectedLesson.content || "*Nothing to preview*"}
+											</ReactMarkdown>
+										</div>
+									)}
+								</div>
 
 								<div className="flex justify-end gap-2">
 									<Button
@@ -503,11 +400,11 @@ export default function ModuleEditor({
 									<Button
 										variant="outline"
 										size="sm"
-										disabled={isgeneratingOutcomes}
+										disabled={isGeneratingOutcomes}
 										onClick={() => handleGenerateOutcomes(selectedLesson.title)}
 									>
 										<Wand2 className="h-3 w-3 mr-2" />
-										{isgeneratingOutcomes ? (
+										{isGeneratingOutcomes ? (
 											<Loader2 className="animate-spin" />
 										) : (
 											"Generate Outcomes"
@@ -516,13 +413,13 @@ export default function ModuleEditor({
 								</div>
 
 								<div className="space-y-2">
-									{selectedLesson?.learningOutcomes?.map((outcome, index) => (
+									{selectedLesson.learningOutcomes.map((outcome, index) => (
 										<div
-											key={index}
+											key={outcome}
 											className="flex items-center gap-2 p-3 border rounded-md"
 										>
 											<Input
-												defaultValue={outcome}
+												value={outcome}
 												className="flex-1"
 												onChange={(e) => {
 													const updatedOutcomes = [
@@ -560,7 +457,7 @@ export default function ModuleEditor({
 									<div className="flex items-center gap-2">
 										<Input
 											placeholder="Enter new learning outcome..."
-											className="flex-1 learning-outcome-input"
+											className="flex-1"
 											onKeyDown={(e) => {
 												if (e.key === "Enter" && e.currentTarget.value.trim()) {
 													setSelectedLesson({
@@ -576,10 +473,9 @@ export default function ModuleEditor({
 										/>
 										<Button
 											size="sm"
-											onClick={() => {
-												const input = document.querySelector<HTMLInputElement>(
-													".learning-outcome-input",
-												);
+											onClick={(e) => {
+												const input = e.currentTarget
+													.previousElementSibling as HTMLInputElement;
 												if (input?.value.trim()) {
 													setSelectedLesson({
 														...selectedLesson,
@@ -596,6 +492,7 @@ export default function ModuleEditor({
 										</Button>
 									</div>
 								</div>
+
 								<div className="flex justify-end gap-2">
 									<Button
 										variant="outline"

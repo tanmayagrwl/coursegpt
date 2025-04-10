@@ -25,7 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { BASE_URL } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import type { Course } from "@/types/types";
 export default function Dashboard() {
@@ -36,30 +35,30 @@ export default function Dashboard() {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [courses, setCourses] = useState<Course[]>([]);
 
-  const fetchCourses = async () => {
+	const fetchCourses = async () => {
 		try {
-			const response = await axios.get(`${BASE_URL}/api/getAllCourses`);
+			const response = await axios.get("/api/getAllCourses");
 			setCourses(response.data);
 		} catch (error) {
 			console.error("Error fetching courses:", error);
 		}
 	};
 
-	useEffect( () => {
-    const fetchCourses = async () => {
-		try {
-			const response = await axios.get(`${BASE_URL}/api/getAllCourses`);
-			setCourses(response.data);
-		} catch (error) {
-			console.error("Error fetching courses:", error);
-		}
-	};
+	useEffect(() => {
+		const fetchCourses = async () => {
+			try {
+				const response = await axios.get("/api/getAllCourses");
+				setCourses(response.data);
+			} catch (error) {
+				console.error("Error fetching courses:", error);
+			}
+		};
 		fetchCourses();
 	}, []);
 
 	const handleCreateCourse = async () => {
 		if (!prompt) {
-			router.push("courses/new");
+			router.push(`/courses/new?title=${title}`);
 			return;
 		}
 		const finalPrompt = title
@@ -67,7 +66,7 @@ export default function Dashboard() {
 			: prompt;
 		try {
 			setIsGenerating(true);
-			await axios.post(`${BASE_URL}/api/generate`, {
+			await axios.post("/api/generate", {
 				text: finalPrompt,
 			});
 			setIsGenerating(false);

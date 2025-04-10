@@ -262,30 +262,6 @@ Mastering ${topic} provides a strong foundation for advanced concepts and practi
                           ))}
                         </div>
                       </TabsContent>
-
-                      <TabsContent value="resources" className="space-y-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="font-medium">Additional Resources</h3>
-                          <Button variant="outline" size="sm">
-                            <Wand2 className="h-3 w-3 mr-2" />
-                            Regenerate
-                          </Button>
-                        </div>
-
-                        <div className="space-y-2">
-                          {generatedContent.resources.map((resource, index) => (
-                            <div key={index} className="p-3 border rounded-md flex justify-between items-center">
-                              <div>
-                                <div className="font-medium">{resource.title}</div>
-                                <div className="text-sm text-gray-500">{resource.type}</div>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                View
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      </TabsContent>
                     </Tabs>
                   </CardContent>
                 </Card>
