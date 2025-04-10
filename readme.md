@@ -111,9 +111,9 @@ CourseGPT is a powerful AI-driven platform for creating and managing educational
 
 CourseGPT is built with:
 - Next.js
-- React
 - TypeScript
 - MongoDB
+- Hono
 - Tailwind CSS
 - Shadcn UI
 - Gemini 2.0 Flash
